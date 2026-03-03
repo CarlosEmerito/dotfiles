@@ -1,0 +1,98 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 32,
+    "spacing": 4,
+    "modules-left": ["hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["pulseaudio", "network", "battery", "tray"],
+
+    "hyprland/workspaces": {
+        "disable-scroll": false,
+        "all-outputs": true,
+        "format": "{icon}",
+        "format-icons": {
+            "1": "一",
+            "2": "二",
+            "3": "三",
+            "4": "四",
+            "5": "五",
+            "6": "六",
+            "7": "七",
+            "8": "八",
+            "9": "九",
+            "10": "十"
+        }
+    },
+
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 50,
+        "separate-outputs": true
+    },
+
+    "clock": {
+        "format": "  {:%H:%M}    {:%d/%m/%Y}",
+        "format-alt": "  {:%A, %B %d, %Y}",
+        "tooltip-format": "<big>{:%Y}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+
+    "battery": {
+        "states": {
+            "good": 100,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon}  {capacity}%",
+        "format-charging": " 󰂄 {capacity}%",
+        "format-plugged": " 󰂄 {capacity}%",
+        "format-alt": "{icon} {time}",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+    },
+
+    "network": {
+        "format-wifi": "󰤨  {signalStrength}%",
+        "format-ethernet": "󰈀  {ipaddr}",
+        "tooltip-format": "󰈀 {ifname} via {gwaddr}",
+        "format-linked": "󰈀  {ifname} (No IP)",
+        "format-disconnected": "󰤭  Desconectado",
+        "interval": 5
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "{icon} {volume}%",
+        "format-bluetooth-muted": "󰝤",
+        "format-muted": "󰝤",
+        "format-icons": {
+            "headphone": "󰋎",
+            "hands-free": "󰌏",
+            "headset": "󰋎",
+            "phone": "� callable",
+            "portable": "󰂎",
+            "car": "󰄋",
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 10
+    },
+
+    "module-group": {
+        "format": "{}",
+        "modules": ["module1", "module2"]
+    },
+
+    "idle": {
+        "format": "{icon}",
+        "format-icons": ["󰌏", "󰍁", "󰍂"],
+        "tooltip": false
+    },
+
+    "separator": {
+        "color": "#45475a"
+    }
+}

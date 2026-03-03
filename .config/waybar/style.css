@@ -1,0 +1,105 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "CommitMono Nerd Font", monospace;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(30, 30, 46, 0.95);
+    color: #cdd6f4;
+}
+
+#workspaces {
+    margin: 0 8px;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    color: #cdd6f4;
+    background: transparent;
+    border-radius: 8px;
+}
+
+#workspaces button.active {
+    background: rgba(137, 180, 250, 0.3);
+    color: #89b4fa;
+}
+
+#workspaces button.urgent {
+    background: rgba(243, 139, 168, 0.3);
+    color: #f38ba8;
+}
+
+#window,
+#clock,
+#battery,
+#network,
+#pulseaudio,
+#tray {
+    padding: 0 12px;
+    margin: 4px 0;
+}
+
+#window {
+    color: #cdd6f4;
+    max-width: 400px;
+}
+
+#clock {
+    color: #89b4fa;
+}
+
+#battery {
+    color: #a6e3a1;
+}
+
+#battery.warning {
+    color: #f9e2af;
+}
+
+#battery.critical {
+    color: #f38ba8;
+}
+
+#network {
+    color: #94e2d5;
+}
+
+#network.disconnected {
+    color: #f38ba8;
+}
+
+#pulseaudio {
+    color: #cba6f7;
+}
+
+#pulseaudio.muted {
+    color: #6c7086;
+}
+
+#tray {
+    background: transparent;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: rgba(243, 139, 168, 0.2);
+}
+
+tooltip {
+    background: rgba(30, 30, 46, 0.95);
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+tooltip label {
+    color: #cdd6f4;
+}
