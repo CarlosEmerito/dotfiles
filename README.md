@@ -13,6 +13,7 @@ Configuración personalizada para Arch Linux con Hyprland y entorno gráfico mod
 | **SwayNC** | Centro de notificaciones |
 | **Nautilus** | Gestor de archivos |
 | **Google Chrome** | Navegador web |
+| **nwg-displays** | Configurador de monitores para Wayland |
 
 ## Requisitos previos
 
@@ -61,6 +62,7 @@ reboot
 - google-chrome
 - swaync
 - libnotify
+- nwg-displays
 
 ## Atajos de teclado principales
 
@@ -87,6 +89,7 @@ dotfiles/
 │   ├── rofi/           # Configuración de Rofi
 │   ├── swaync/         # Configuración de SwayNC
 │   ├── kitty/          # Configuración de Kitty
+│   ├── nwg-displays/   # Configuración de nwg-displays
 │   ├── gtk-3.0/        # Temas GTK3
 │   ├── gtk-4.0/        # Temas GTK4
 │   └── pulse/          # Configuración de PulseAudio

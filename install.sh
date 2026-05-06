@@ -85,7 +85,8 @@ yay -S --needed --noconfirm \
     google-chrome \
     swaync \
     libnotify \
-    ttf-font-awesome
+    ttf-font-awesome \
+    nwg-displays
 
 echo ""
 
@@ -144,7 +145,7 @@ create_symlink_file() {
 }
 
 # Symlink all config directories
-for dir in hypr waybar rofi swaync kitty gtk-3.0 gtk-4.0 pulse; do
+for dir in hypr waybar rofi swaync kitty gtk-3.0 gtk-4.0 pulse nwg-displays; do
     create_symlink_dir "$dir"
 done
 
