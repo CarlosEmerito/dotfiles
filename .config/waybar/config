@@ -1,0 +1,251 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 32,
+    "spacing": 4,
+    "exclusive": true,
+    "gtk-layer": true,
+
+    "modules-left": ["hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["pulseaudio", "custom/brightness", "network", "temperature", "cpu", "battery", "tray"],
+
+    "clock": {
+        "format": " {:%H:%M}",
+        "interval": 30,
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#89b4fa'><b>{}</b></span>",
+                "days": "<span color='#cba6f7'><b>{}</b></span>",
+                "weekdays": "<span color='#f9e2af'><b>{}</b></span>",
+                "today": "<span color='#f38ba8'><b><u>{}</u></b></span>"
+            }
+        }
+    },
+
+    "temperature": {
+        "interval": 10,
+        "tooltip": true,
+        "hwmon-path": [
+            "/sys/class/hwmon/hwmon1/temp1_input",
+            "/sys/class/thermal/thermal_zone0/temp"
+        ],
+        "critical-threshold": 82,
+        "format-critical": "{temperatureC}°C {icon}",
+        "format": "{temperatureC}°C {icon}",
+        "format-icons": ["󰈸"]
+    },
+
+    "cpu": {
+        "format": " 󰍛 {usage}%",
+        "tooltip": true,
+        "interval": 2,
+        "states": {
+            "high": 70
+        }
+    },
+
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": " {icon} {capacity}%",
+        "format-charging": " 󰂄 {capacity}%",
+        "format-plugged": " 󰂄 {capacity}%",
+        "format-alt": "{icon} {capacity}%",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+        "tooltip": true
+    },
+
+    "network": {
+        "format-wifi": " 󰤨 {signalStrength}%",
+        "format-ethernet": " 󰈀 {ipaddr}/{cidr}",
+        "tooltip-format": "{ifname} via {gwaddr}",
+        "format-linked": " 󰈀 {ifname} (No IP)",
+        "format-disconnected": "󰤭",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "interval": 5,
+        "tooltip": true
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "{icon} {volume}%",
+        "format-bluetooth-muted": " 󰝛",
+        "format-muted": " 󰝟",
+        "format-source": " 󰍬 {volume}%",
+        "format-source-muted": " 󰍭",
+        "format-icons": {
+            "headphone": "󰋋",
+            "hands-free": "󰖀",
+            "headset": "󰗠",
+            "phone": "󰏎",
+            "portable": "󰕒",
+            "car": "󰟔",
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "tooltip": true
+    },
+
+    "custom/brightness": {
+        "format": "󰃞 {}%",
+        "exec": "echo $(( $(cat /sys/class/backlight/intel_backlight/brightness) * 100 / $(cat /sys/class/backlight/intel_backlight/max_brightness) )) && while read; do echo $(( $(cat /sys/class/backlight/intel_backlight/brightness) * 100 / $(cat /sys/class/backlight/intel_backlight/max_brightness) )); done < <(inotifywait -m -e modify /sys/class/backlight/intel_backlight/brightness 2>/dev/null)",
+        "return-type": "text",
+        "tooltip": true,
+        "on-scroll-up": "brightnessctl -s set 10%+",
+        "on-scroll-down": "brightnessctl -s set 10%-"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 10
+    },
+
+    "hyprland/workspaces": {
+        "disable-scroll": false,
+        "all-outputs": true,
+        "sort-by-number": true,
+        "format": "{icon} {windows}",
+        "format-window-separator": " ",
+        "window-rewrite-default": " ",
+        "persistent-workspaces": {
+            "*": 5
+        },
+        "format-icons": {
+            "default": "󰊠",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10"
+        },
+        "window-rewrite": {
+            "title<.*amazon.*>": " ",
+            "title<.*reddit.*>": " ",
+
+            "class<firefox|org.mozilla.firefox|librewolf|floorp|mercury-browser|[Cc]achy-browser>": " ",
+            "class<zen>": "󰰷 ",
+            "class<waterfox|waterfox-bin>": " ",
+            "class<microsoft-edge>": " ",
+            "class<Chromium|Thorium|[Cc]hrome>": " ",
+            "class<brave-browser>": "🦁 ",
+            "class<tor browser>": " ",
+            "class<firefox-developer-edition>": "🦊 ",
+
+            "class<kitty|konsole|[Aa]lacritty>": " ",
+            "class<kitty-dropterm>": " ",
+            "class<com.mitchellh.ghostty>": " ",
+            "class<org.wezfurlong.wezterm>": " ",
+            "class<Warp|warp|dev.warp.Warp|warp-terminal>": "󰰭 ",
+
+            "class<[Tt]hunderbird|[Tt]hunderbird-esr>": " ",
+            "class<eu.betterbird.Betterbird>": " ",
+            "title<.*gmail.*>": "󰊫 ",
+
+            "class<[Tt]elegram-desktop|org.telegram.desktop|io.github.tdesktop_x64.TDesktop>": " ",
+            "class<discord|discord-canary|[Ww]ebcord|[Vv]esktop|com.discordapp.Discord|dev.vencord.Vesktop>": " ",
+            "class<[Ss]ignal|signal-desktop|org.signal.Signal>": "󰍩 ",
+            "title<.*Signal.*>": "󰍩 ",
+            "title<.*whatsapp.*>": " ",
+            "title<.*zapzap.*>": " ",
+            "title<.*messenger.*>": " ",
+            "title<.*facebook.*>": " ",
+            "title<.*Discord.*>": " ",
+
+            "title<.*ChatGPT.*>": "󰚩 ",
+            "title<.*deepseek.*>": "󰚩 ",
+            "title<.*qwen.*>": "󰚩 ",
+            "class<subl>": "󰅳 ",
+            "class<slack>": " ",
+
+            "class<mpv>": " ",
+            "class<celluloid|Zoom>": " ",
+            "class<Cider>": "󰎆 ",
+            "title<.*Picture-in-Picture.*>": " ",
+            "title<.*youtube.*>": " ",
+            "class<vlc>": "󰕼 ",
+            "class<[Kk]denlive|org.kde.kdenlive>": "🎬 ",
+            "title<.*Kdenlive.*>": "🎬 ",
+            "title<.*cmus.*>": " ",
+            "class<[Ss]potify>": " ",
+            "class<Plex>": "󰚺 ",
+
+            "class<virt-manager>": " ",
+            "class<.virt-manager-wrapped>": " ",
+            "class<remote-viewer|virt-viewer>": " ",
+            "class<virtualbox manager>": "💽 ",
+            "title<virtualbox>": "💽 ",
+            "class<remmina|org.remmina.Remmina>": "🖥️ ",
+
+            "class<VSCode|code|code-url-handler|code-oss|codium|codium-url-handler|VSCodium>": "󰨞 ",
+            "class<dev.zed.Zed>": "󰵁",
+            "class<codeblocks>": "󰅩 ",
+            "title<.*github.*>": " ",
+            "class<mousepad>": " ",
+            "class<libreoffice-writer>": " ",
+            "class<libreoffice-startcenter>": "󰏆 ",
+            "class<libreoffice-calc>": " ",
+            "title<.*nvim ~.*>": " ",
+            "title<.*vim.*>": " ",
+            "title<.*nvim.*>": " ",
+            "title<.*figma.*>": " ",
+            "title<.*jira.*>": " ",
+            "class<jetbrains-idea>": " ",
+
+            "class<obs|com.obsproject.Studio>": " ",
+
+            "class<polkit-gnome-authentication-agent-1>": "󰒃 ",
+            "class<nwg-look>": " ",
+            "class<nwg-displays>": " ",
+            "class<[Pp]avucontrol|org.pulseaudio.pavucontrol>": "󱡫 ",
+            "class<steam>": " ",
+            "class<thunar|nemo>": "󰝰 ",
+            "class<Gparted>": "",
+            "class<gimp>": " ",
+            "class<emulator>": "📱 ",
+            "class<android-studio>": " ",
+            "class<org.pipewire.Helvum>": "󰓃",
+            "class<localsend>": "",
+            "class<PrusaSlicer|UltiMaker-Cura|OrcaSlicer>": "󰹛",
+
+            "class<io.github.kolunmi.Bazaar>": " ",
+            "title<^Bazaar$>": " ",
+
+            "class<com.gabm.satty>": " ",
+            "title<^satty$>": " ",
+
+            "class<[Bb]ox[Bb]uddy|io.github.dvlv.boxbuddy|io.github.dvlv.BoxBuddy>": " ",
+            "title<.*BoxBuddy.*>": " ",
+
+            "title<Hyprland Keybinds>": " ",
+            "title<Niri Keybinds>": " ",
+            "title<BSPWM Keybinds>": " ",
+            "title<DWM Keybinds>": " ",
+            "title<Emacs Leader Keybinds>": " ",
+            "title<Kitty Configuration>": " ",
+            "title<WezTerm Configuration>": " ",
+            "title<Yazi Configuration>": " ",
+            "title<Cheatsheets Viewer>": " ",
+            "title<Documentation Viewer>": " ",
+            "title<^Wallpapers$>": " ",
+            "title<^Video Wallpapers$>": " ",
+            "title<^qs-wlogout$>": " "
+        }
+    },
+
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 50,
+        "separate-outputs": true
+    }
+}

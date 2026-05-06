@@ -1,0 +1,167 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrains Mono Nerd Font", "Font Awesome 6 Free", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(20, 20, 30, 0.95);
+    color: #cdd6f4;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+#workspaces {
+    margin: 0 4px;
+}
+
+#workspaces button {
+    padding: 0 4px;
+    color: #cdd6f4;
+    transition: all 0.3s ease;
+}
+
+#workspaces button.active {
+    color: #f38ba8;
+    text-shadow: 0 0 8px rgba(243, 139, 168, 0.5);
+    border-bottom: 2px solid #f38ba8;
+}
+
+#workspaces button.urgent {
+    color: #f38ba8;
+    background: rgba(243, 139, 168, 0.15);
+}
+
+#clock,
+#battery,
+#cpu,
+#memory,
+#disk,
+#temperature,
+#backlight,
+#network,
+#pulseaudio,
+#tray,
+#mode,
+#idle_inhibitor,
+#window,
+#workspaces {
+    padding: 0 10px;
+    margin: 0 2px;
+    color: #cdd6f4;
+}
+
+#window {
+    color: #f5c2e7;
+    font-weight: 600;
+}
+
+#workspaces button.persistent {
+    color: #a6adc8;
+}
+
+#battery {
+    color: #a6e3a1;
+}
+
+#battery.charging,
+#battery.plugged {
+    color: #f9e2af;
+}
+
+#battery.warning:not(.charging) {
+    color: #f9e2af;
+}
+
+#battery.critical:not(.charging) {
+    color: #f38ba8;
+    animation: blink 0.5s linear infinite alternate;
+}
+
+@keyframes blink {
+    to {
+        background-color: rgba(243, 139, 168, 0.2);
+        color: #fab387;
+    }
+}
+
+#cpu.warning {
+    color: #f9e2af;
+}
+
+#cpu.critical {
+    color: #f38ba8;
+}
+
+#memory.warning {
+    color: #f9e2af;
+}
+
+#memory.critical {
+    color: #f38ba8;
+    animation: blink 0.5s linear infinite alternate;
+}
+
+#temperature.critical {
+    color: #f38ba8;
+}
+
+#network.disconnected {
+    color: #f38ba8;
+}
+
+#workspaces button.persistent {
+    color: #a6adc8;
+}
+
+#pulseaudio.muted {
+    color: #6c7086;
+}
+
+#tray {
+    background: transparent;
+}
+
+#mode {
+    background: #cdd6f4;
+    color: #11111b;
+    font-weight: bold;
+    padding: 0 6px;
+    border-radius: 4px;
+}
+
+#idle_inhibitor.activated {
+    color: #f5c2e7;
+}
+
+#workspaces button:hover {
+    background: rgba(137, 180, 250, 0.1);
+    color: #89b4fa;
+}
+
+#clock {
+    color: #89b4fa;
+    font-weight: 600;
+}
+
+window#waybar.popup {
+    background: #1e1e2e;
+}
+
+window#waybar.popup > .tool-tip {
+    background: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+window#waybar.popup > .tool-tip label {
+    color: #cdd6f4;
+    padding: 8px 12px;
+}

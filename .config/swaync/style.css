@@ -1,0 +1,16 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrains Mono", sans-serif;
+    font-size: 13px;
+}
+
+window#notification {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+window#control-center {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}

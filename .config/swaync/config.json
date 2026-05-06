@@ -1,0 +1,26 @@
+{
+  "max-visible": 5,
+  "default-timeout": 5000,
+  "hide-on-action": false,
+  "transient-gaps": true,
+  "layer": "overlay",
+  "anchors": "bottom-right",
+  "margin-right": 20,
+  "margin-bottom": 20,
+  "width": 350,
+  "height": 400,
+  "control-center-width": 400,
+  "control-center-height": 600,
+  "notification-icon-size": 48,
+  "app-icon-size": 32,
+  "default-layout": "list",
+  "sort": "time",
+  "group": true,
+  "group-raise": true,
+  "icon-theme": "Papirus-Dark",
+  "icons": {
+    "notification": "dialog-information",
+    "zero": "notification-disabled",
+    "multiple": "notification-new"
+  }
+}
