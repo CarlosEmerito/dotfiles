@@ -99,6 +99,12 @@ create_symlink_dir() {
     local src="$DOTFILES_DIR/.config/$1"
     local dest="$HOME/.config/$1"
     
+    # Security check: ensure dest is within $HOME/.config
+    if [[ ! "$dest" =~ ^$HOME/.config/ ]]; then
+        echo -e "${RED}Error: Invalid destination path: $dest${NC}"
+        return 1
+    fi
+    
     if [[ -d "$src" ]]; then
         # Remove existing config if it exists
         if [[ -e "$dest" || -L "$dest" ]]; then
@@ -135,18 +141,36 @@ sudo usermod -aG video,input,audio "$USER"
 
 echo ""
 
-# Set up display manager (optional - SDDM)
-echo -e "${YELLOW}Do you want to install and enable SDDM display manager? (y/n)${NC}"
-read -r response
-if [[ "$response" =~ ^[Yy]$ ]]; then
-    sudo pacman -S --needed --noconfirm sddm
-    sudo systemctl enable sddm
-    echo -e "${GREEN}SDDM enabled${NC}"
-else
-    echo -e "${YELLOW}Skipping SDDM. You can start Hyprland with 'Hyprland' command from TTY${NC}"
-fi
+# Set up display manager or auto-login
+echo -e "${YELLOW}¿Cómo quieres iniciar Hyprland?${NC}"
+echo "1) SDDM (display manager con login gráfico)"
+echo "2) Auto-login (entra directo sin contraseña - MENOS SEGURO)"
+echo "3) Ninguno (iniciar manual con 'Hyprland' desde TTY)"
+read -r -p "Selecciona opción [1-3]: " dm_option
+
+case $dm_option in
+    1)
+        echo -e "${GREEN}Instalando SDDM...${NC}"
+        sudo pacman -S --needed --noconfirm sddm
+        sudo systemctl enable sddm
+        echo -e "${GREEN}SDDM habilitado${NC}"
+        ;;
+    2)
+        if [[ -f "$DOTFILES_DIR/setup-autologin.sh" ]]; then
+            "$DOTFILES_DIR/setup-autologin.sh"
+        else
+            echo -e "${RED}Error: setup-autologin.sh no encontrado${NC}"
+        fi
+        ;;
+    3)
+        echo -e "${YELLOW}Saltando configuración de inicio automático${NC}"
+        echo -e "${YELLOW}Para iniciar Hyprland ejecuta: Hyprland${NC}"
+        ;;
+    *)
+        echo -e "${YELLOW}Opción no válida. Saltando...${NC}"
+        ;;
+esac
 
 echo ""
 echo -e "${GREEN}=== Installation Complete! ===${NC}"
-echo -e "${YELLOW}Please reboot your system to apply all changes${NC}"
-echo -e "${YELLOW}After reboot, you can start Hyprland from TTY or via display manager${NC}"
+echo -e "${YELLOW}Por favor, reinicia el sistema: reboot${NC}"

@@ -34,6 +34,11 @@ chmod +x install.sh
 ./install.sh
 ```
 
+**Nota:** Durante la instalación se te preguntará cómo quieres iniciar Hyprland:
+- **Opción 1 (SDDM):** Display manager gráfico con login tradicional
+- **Opción 2 (Auto-login):** Entra directo sin contraseña (configura `setup-autologin.sh`)
+- **Opción 3:** Inicio manual ejecutando `Hyprland` desde TTY
+
 3. Reiniciar el sistema:
 ```bash
 reboot
@@ -93,5 +98,6 @@ dotfiles/
 
 - El layout de teclado está configurado en español (`es`)
 - Se configura automáticamente el soporte para Wayland en apps Qt, GTK, SDL y Electron
-- Se instala SDDM opcionalmente como display manager
-- Sin SDDM, puedes iniciar Hyprland ejecutando `Hyprland` desde una TTY
+- Se ofrecen 3 opciones para iniciar Hyprland: SDDM, Auto-login o manual
+- El script `setup-autologin.sh` configura auto-login sin contraseña (solo usar si confías en la seguridad física de tu PC)
+- **Importante:** Las rutas en `waybar/config` para sensores de temperatura (`/sys/class/hwmon/hwmon1`) y brillo (`/sys/class/backlight/intel_backlight`) pueden variar según el hardware. Ajustar si es necesario.
