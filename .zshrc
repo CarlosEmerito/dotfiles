@@ -46,16 +46,4 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-export PATH="$HOME/.opencode/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$PATH:/home/emerito/.lmstudio/bin"
-
-alias ls='ls --color=auto'
-alias grep='grep --color=auto'
-alias mindustry='SDL_VIDEODRIVER=x11 /usr/local/bin/mindustry'
-
 fastfetch
-export PATH="$HOME/bin:$PATH"
-
-alias torre='ssh torre'
-alias bb='bb -driver slang'
