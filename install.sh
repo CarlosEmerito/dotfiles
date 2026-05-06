@@ -118,10 +118,58 @@ create_symlink_dir() {
     fi
 }
 
+# Function to create symlink for files
+create_symlink_file() {
+    local src="$DOTFILES_DIR/$1"
+    local dest="$HOME/$1"
+    
+    # Security check: ensure dest is within $HOME
+    if [[ ! "$dest" =~ ^$HOME/ ]]; then
+        echo -e "${RED}Error: Invalid destination path: $dest${NC}"
+        return 1
+    fi
+    
+    if [[ -f "$src" ]]; then
+        # Remove existing file if it exists
+        if [[ -e "$dest" || -L "$dest" ]]; then
+            rm -f "$dest"
+        fi
+        # Create symlink
+        ln -sf "$src" "$dest"
+        echo -e "${GREEN}Linked: $1${NC}"
+    else
+        echo -e "${YELLOW}Warning: $src not found${NC}"
+    fi
+}
+
 # Symlink all config directories
 for dir in hypr waybar rofi swaync kitty gtk-3.0 gtk-4.0 pulse; do
     create_symlink_dir "$dir"
 done
+
+# Symlink shell config files
+echo -e "${GREEN}Setting up zsh...${NC}"
+
+# Create symlink for .zshrc
+create_symlink_file ".zshrc"
+
+# Install Oh My Zsh if not present
+if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    echo -e "${GREEN}Installing Oh My Zsh...${NC}"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    echo -e "${GREEN}Oh My Zsh installed${NC}"
+else
+    echo -e "${GREEN}Oh My Zsh is already installed${NC}"
+fi
+
+# Change default shell to zsh if not already
+if [[ "$SHELL" != *"zsh"* ]]; then
+    echo -e "${GREEN}Changing default shell to zsh...${NC}"
+    chsh -s "$(which zsh)"
+    echo -e "${GREEN}Default shell changed to zsh${NC}"
+else
+    echo -e "${GREEN}Default shell is already zsh${NC}"
+fi
 
 echo ""
 
