@@ -44,6 +44,7 @@ echo ""
 # Official packages (pacman)
 echo -e "${GREEN}Installing official packages...${NC}"
 sudo pacman -S --needed --noconfirm \
+    zsh \
     hyprland \
     hyprcursor \
     hyprlang \
