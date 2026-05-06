@@ -129,9 +129,7 @@ echo ""
 echo -e "${GREEN}Enabling services...${NC}"
 sudo systemctl enable NetworkManager
 sudo systemctl enable bluetooth
-sudo systemctl enable pipewire
-sudo systemctl enable pipewire-pulse
-sudo systemctl enable wireplumber
+systemctl --user enable pipewire pipewire-pulse wireplumber 2>/dev/null || echo -e "${YELLOW}User services will start via socket activation${NC}"
 
 echo ""
 
