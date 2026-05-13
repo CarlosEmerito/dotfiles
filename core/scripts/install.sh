@@ -174,10 +174,21 @@ esac
 
 if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     info "Configurando IA (EmeBotEme)..."
-    sudo pip install --break-system-packages pynput sounddevice numpy faster-whisper scipy evdev pyudev > /dev/null 2>&1 &
-    show_progress $! "Instalando dependencias Python"
+    
+    # Preparar directorio persistente para el servicio
+    AI_INSTALL_DIR="$HOME/.config/emeboteme"
+    mkdir -p "$AI_INSTALL_DIR/ai"
+    cp -r "$DOTFILES_DIR/modules/ai/"* "$AI_INSTALL_DIR/ai/"
+    
+    info "Creando entorno virtual de Python..."
+    python3 -m venv "$AI_INSTALL_DIR/venv"
+    source "$AI_INSTALL_DIR/venv/bin/activate"
+    
+    pip install --upgrade pip > /dev/null 2>&1
+    pip install -r "$AI_INSTALL_DIR/ai/requirements.txt" > /dev/null 2>&1 &
+    show_progress $! "Instalando dependencias en venv"
 
-    DOT_ENV_FILE="$DOTFILES_DIR/.env"
+    DOT_ENV_FILE="$AI_INSTALL_DIR/.env"
     if [[ ! -f "$DOT_ENV_FILE" ]]; then
         read -r -p "Introduce tu HF_TOKEN de Hugging Face: " hf_token
         echo "HF_TOKEN=$hf_token" > "$DOT_ENV_FILE"
@@ -186,16 +197,34 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     info "Habilitando servicio..."
     chmod +x "$DOTFILES_DIR/core/scripts/focus_listener.sh"
     
-    # Pre-descarga de modelos Whisper
+    # Pre-descarga de modelos Whisper usando el venv
     info "Descargando modelos de IA (Whisper tiny y base)..."
-    python3 -c "from faster_whisper import WhisperModel; WhisperModel('tiny'); WhisperModel('base')" > /dev/null 2>&1 &
-    show_progress $! "Descargando modelos"
+    if "$AI_INSTALL_DIR/venv/bin/python" -c "from faster_whisper import WhisperModel; WhisperModel('tiny'); WhisperModel('base')" > /tmp/whisper_download.log 2>&1; then
+        success "Modelos descargados correctamente."
+    else
+        error "Fallo al descargar modelos de IA. Revisa /tmp/whisper_download.log"
+        warn "Es posible que la IA no funcione correctamente sin conexión o espacio en disco."
+    fi
 
     mkdir -p "$HOME/.config/systemd/user"
+    
+    # Ajustar el servicio para usar el venv
+    sed -i "s|ExecStart=.*|ExecStart=$AI_INSTALL_DIR/venv/bin/python -u $AI_INSTALL_DIR/ai/main.py|" "$DOTFILES_DIR/core/services/emeboteme.service"
+    
     cp "$DOTFILES_DIR/core/services/emeboteme.service" "$HOME/.config/systemd/user/"
     systemctl --user daemon-reload
     systemctl --user enable --now emeboteme.service
     success "IA activa."
+    
+    warn "IMPORTANTE: Se ha añadido tu usuario a los grupos 'input', 'video' y 'audio'."
+    warn "Debes REINICIAR o CERRAR SESIÓN para que la IA tenga permisos de teclado."
+fi
+
+echo ""
+info "¡Instalación completada!"
+read -p "¿Reiniciar ahora? (s/n): " confirm_reboot
+[[ $confirm_reboot == [sS] ]] && sudo reboot
+ "IA activa."
 fi
 
 echo ""
