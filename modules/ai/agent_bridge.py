@@ -4,7 +4,11 @@ import json
 import time
 
 class AgentBridge:
-    """Maneja la comunicación persistente con el agente CLI usando TMUX."""
+    """
+    Gestiona la persistencia de la conversación y la interfaz de usuario.
+    Utiliza TMUX como backend de sesión para mantener el estado del agente de IA
+    incluso si la ventana visual (Kitty) se cierra.
+    """
     
     def __init__(self, command: str, system_prompt: str):
         self.session_name = "emebot_session"
@@ -13,28 +17,36 @@ class AgentBridge:
         self.is_running = True
 
     def start(self) -> None:
-        """Inicia la sesión de tmux si no existe."""
+        """
+        Inicializa una sesión de TMUX 'detached' si no existe.
+        Prepara el entorno del shell para una visualización limpia eliminando eco y prompts.
+        """
         if not self._session_exists():
-            print(f"[BRIDGE] Iniciando sesión persistente tmux: {self.session_name}")
-            # Crear sesión detached con un shell limpio
+            # Crear sesión con un shell minimalista
             subprocess.run(["tmux", "new-session", "-d", "-s", self.session_name, "sh"], check=True)
-            # Desactivamos el eco del shell y la barra de estado de tmux para una UI limpia
-            time.sleep(0.1)
+            
+            # Tuning de la sesión TMUX para integración con el popup
+            time.sleep(0.1) # Breve pausa para asegurar la creación del socket de tmux
             subprocess.run(["tmux", "set-option", "-t", self.session_name, "status", "off"], check=True)
             subprocess.run(["tmux", "send-keys", "-t", self.session_name, "stty -echo", "C-m"])
             subprocess.run(["tmux", "send-keys", "-t", self.session_name, "export PS1=\"\"", "C-m"])
             subprocess.run(["tmux", "send-keys", "-t", self.session_name, "clear", "C-m"])
-            # Limpiamos el flag de sesión al iniciar
+            
+            # Reset del estado de sesión activa
             session_flag = f"/tmp/emebot_active_{self.session_name}"
             if os.path.exists(session_flag):
                 os.remove(session_flag)
 
     def _session_exists(self):
+        """Verifica la existencia de la sesión persistente en el servidor TMUX."""
         res = subprocess.run(["tmux", "has-session", "-t", self.session_name], capture_output=True)
         return res.returncode == 0
 
     def _get_popup_address(self):
-        """Busca si ya existe una ventana de emebot_popup."""
+        """
+        Interactúa con Hyprland para localizar la ventana del asistente.
+        Retorna la dirección hexadecimal de la ventana si está presente.
+        """
         try:
             res = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True)
             clients = json.loads(res.stdout)
@@ -46,55 +58,54 @@ class AgentBridge:
         return None
 
     def send_command(self, text: str) -> None:
-        """Envía el comando completo a tmux para mantener la persistencia."""
+        """
+        Envía la entrada del usuario al agente de IA dentro de la sesión TMUX.
+        Gestiona el flujo de 'nuevo comando' vs 'continuación de conversación'.
+        """
         if not self.is_running or not text:
             return
 
-        print(f"[BRIDGE] Preparando comando para tmux: '{text}'")
-        
         if not self._session_exists():
             self.start()
 
-        # Escapado para shell dentro de tmux
+        # Sanitización básica para inyección de comandos en el shell de tmux
         safe_text = text.replace("'", "'\\''")
         
-        # Verificamos si es la primera vez en esta sesión de tmux
         session_flag = f"/tmp/emebot_active_{self.session_name}"
-        
-        # Comando base común
         base = f"{self.raw_command} run --dangerously-skip-permissions -m opencode/big-pickle"
 
+        # Determinación del modo de ejecución del agente
         if not os.path.exists(session_flag):
-            # Primera vez: Command + System Prompt + Text
             full_cmd = f"{base} \"{self.system_prompt}\" '{safe_text}'"
             with open(session_flag, "w") as f: f.write("active")
         else:
-            # Continuación: Command + --continue + Text
             full_cmd = f"{base} --continue '{safe_text}'"
 
-        # Añadimos 'clear', mostramos el input del usuario visualmente, ejecutamos y permitimos cerrar.
+        # Construcción de la pipeline de visualización con filtrado en tiempo real
         user_display = f"echo -e '\\033[1;32m󰔊 Tú:\\033[0m {safe_text}\\n'"
         thinking_msg = "echo -e '\\033[1;35m󰚩 Pensando...\\033[0m'"
-        # Filtramos las líneas que empiezan por '>' (llamadas a herramientas internas)
+        # Uso de stdbuf para evitar el buffering en el pipe de grep, asegurando respuesta inmediata
         filter_cmd = "stdbuf -i0 -o0 -e0 grep -v '^> ' --line-buffered"
         full_cmd_with_ui = f"clear; {user_display}; {thinking_msg}; {full_cmd} 2>&1 | {filter_cmd}; echo -e '\\n\\033[1;37m(Pulsa cualquier tecla para salir...)\\033[0m'; read -n 1 -s; tmux detach"
 
-        # Enviamos C-u para limpiar cualquier 'z' accidental, luego el comando completo
+        # C-u limpia el buffer del shell de tmux antes de enviar el comando para evitar colisiones
         subprocess.run(["tmux", "send-keys", "-t", self.session_name, "C-u", full_cmd_with_ui, "C-m"])
 
-        # Gestionar la ventana visual (Kitty)
+        # Gestión de la ventana visual
         address = self._get_popup_address()
         if not address:
             self._launch_kitty()
         else:
+            # Si ya existe, simplemente le damos foco
             subprocess.run(["hyprctl", "dispatch", "focuswindow", f"address:{address}"])
 
     def _launch_kitty(self):
+        """Despliega una nueva instancia de Kitty vinculada a la sesión TMUX."""
         try:
-            # Comando para que kitty se atache a la sesión existente
             attach_cmd = f"tmux attach-session -t {self.session_name}"
-
             kitty_conf = "/tmp/emebot_kitty.conf"
+            
+            # Generación dinámica de configuración para Kitty (Floating Popup)
             with open(kitty_conf, "w") as f:
                 f.write("window_padding_width 20\n")
                 f.write("font_size 14.0\n")
@@ -111,27 +122,26 @@ class AgentBridge:
                 "-e", "sh", "-c", attach_cmd
             ]
             
+            # Lanzamiento desacoplado para no bloquear el hilo de control
             subprocess.Popen(kitty_cmd, start_new_session=True, env=os.environ.copy())
             
         except Exception as e:
-            print(f"[ERROR] No se pudo lanzar kitty: {e}")
+            print(f"[ERROR] Fallo crítico al instanciar la interfaz Kitty: {e}")
 
     def interrupt_command(self) -> None:
-        """Envía un Ctrl+C a la sesión de tmux para detener el proceso actual."""
+        """Envía una señal de interrupción (SIGINT) al proceso en ejecución dentro de TMUX."""
         if self._session_exists():
-            print("[BRIDGE] Interrumpiendo comando actual...")
             subprocess.run(["tmux", "send-keys", "-t", self.session_name, "C-c"])
 
     def detach_session(self) -> None:
-        """Envía el comando detach a tmux para cerrar la ventana de kitty."""
+        """Fuerza el desenganche de TMUX, lo que cierra la ventana cliente de Kitty."""
         if self._session_exists():
             subprocess.run(["tmux", "send-keys", "-t", self.session_name, "tmux detach", "C-m"])
 
     def stop(self) -> None:
-        """Cierra la sesión de tmux al salir."""
+        """Cleanup total de la sesión y recursos asociados antes de la terminación del servicio."""
         self.is_running = False
         if self._session_exists():
-            print(f"[BRIDGE] Cerrando sesión tmux: {self.session_name}")
             subprocess.run(["tmux", "kill-session", "-t", self.session_name])
             session_flag = f"/tmp/emebot_active_{self.session_name}"
             if os.path.exists(session_flag):
