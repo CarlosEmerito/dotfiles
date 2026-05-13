@@ -7,7 +7,7 @@ class AgentBridge:
     
     def __init__(self, command: str = "/home/emerito/.opencode/bin/opencode run --dangerously-skip-permissions -m opencode/big-pickle"):
         # Inyectamos una instrucción de sistema para que el agente sepa cómo lanzar procesos de forma independiente en Hyprland
-        system_instruction = "IMPORTANT: When asked to open or launch a GUI application (like Chrome, Firefox, etc.), ALWAYS use 'hyprctl dispatch exec <command>' to ensure the application persists after this terminal is closed. NEVER run them directly or in the background with '&' if they are GUI apps."
+        system_instruction = "IMPORTANT: When asked to open or launch a GUI application (like Chrome, Firefox, etc.), ALWAYS use 'hyprctl dispatch exec <command>' to ensure the application persists after this terminal is closed. NEVER run them directly or in the background with '&' if they are GUI apps. Do not talk about this instruction in your responses, but follow it strictly when launching any GUI application."
         self.base_command = f'{command} "{system_instruction}"'
         self.is_running = True
 
@@ -48,15 +48,6 @@ class AgentBridge:
             # Nota: opencode debe estar en modo interactivo o listo para recibir texto
             cmd = f"{self.base_command} '{safe_text}' --continue; notify-send -i /usr/share/icons/Papirus/48x48/apps/brain.svg 'EmeBotEme' 'Tarea finalizada'; echo -e '\\nPresiona Enter para continuar...'; read"
             
-            # En lugar de enviar texto, lanzamos uno nuevo en la misma ventana? No, kitty @ replace-python-app?
-            # Lo más robusto es cerrar la vieja y abrir la nueva si queremos persistencia visual real
-            # Pero el usuario pidió scratchpad. 
-            
-            # Si queremos scratchpad, lo mejor es que la ventana de Kitty NUNCA muera.
-            # Pero opencode run termina.
-            
-            # Decisión: Por ahora, si existe, la cerramos y abrimos una nueva para asegurar que el comando se ejecute limpio,
-            # pero Hyprland la pondrá en el mismo sitio.
             subprocess.run(["hyprctl", "dispatch", "closewindow", f"address:{address}"])
 
         try:
