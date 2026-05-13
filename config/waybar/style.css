@@ -1,3 +1,31 @@
+/* Catppuccin Mocha colors */
+@define-color base   #1e1e2e;
+@define-color mantle #181825;
+@define-color crust  #11111b;
+@define-color text   #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color subtext1 #bac272;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+@define-color overlay0 #6c7086;
+@define-color overlay1 #7f849c;
+@define-color overlay2 #9399b2;
+@define-color blue      #89b4fa;
+@define-color lavender  #b4befe;
+@define-color sapphire  #74c7ec;
+@define-color sky       #89dceb;
+@define-color teal      #94e2d5;
+@define-color green     #a6e3a1;
+@define-color yellow    #f9e2af;
+@define-color peach     #fab387;
+@define-color maroon    #eba0ac;
+@define-color red       #f38ba8;
+@define-color mauve     #cba6f7;
+@define-color pink      #f5c2e7;
+@define-color flamingo  #f2cdcd;
+@define-color rosewater #f5e0dc;
+
 * {
     border: none;
     border-radius: 0;
@@ -7,8 +35,8 @@
 }
 
 window#waybar {
-    background: rgba(20, 20, 30, 0.95);
-    color: #cdd6f4;
+    background: rgba(30, 30, 46, 0.95); /* base with opacity */
+    color: @text;
     transition-property: background-color;
     transition-duration: .5s;
 }
@@ -23,24 +51,24 @@ window#waybar.hidden {
 
 #workspaces button {
     padding: 0 4px;
-    color: #cdd6f4;
+    color: @subtext0;
     transition: all 0.3s ease;
 }
 
 #workspaces button.active {
-    color: #f38ba8;
-    text-shadow: 0 0 8px rgba(243, 139, 168, 0.5);
-    border-bottom: 2px solid #f38ba8;
+    color: @mauve;
+    text-shadow: 0 0 8px rgba(203, 166, 247, 0.5);
+    border-bottom: 2px solid @mauve;
 }
 
 #workspaces button.urgent {
-    color: #f38ba8;
+    color: @red;
     background: rgba(243, 139, 168, 0.15);
 }
 
 #custom-emebot {
-    background: rgba(187, 154, 247, 0.1);
-    color: #bb9af7;
+    background: rgba(203, 166, 247, 0.1);
+    color: @mauve;
     border-radius: 8px;
     margin: 4px;
     padding: 0 10px;
@@ -48,13 +76,13 @@ window#waybar.hidden {
 
 #custom-emebot.RECORDING {
     background: rgba(243, 139, 168, 0.2);
-    color: #f38ba8;
+    color: @red;
     animation: blink 0.5s linear infinite alternate;
 }
 
 #custom-emebot.PROCESSING {
     background: rgba(249, 226, 175, 0.2);
-    color: #f9e2af;
+    color: @yellow;
     animation: pulse 1.5s infinite ease-in-out;
 }
 
@@ -80,74 +108,66 @@ window#waybar.hidden {
 #workspaces {
     padding: 0 10px;
     margin: 0 2px;
-    color: #cdd6f4;
+    color: @text;
 }
 
 #window {
-    color: #f5c2e7;
+    color: @pink;
     font-weight: 600;
 }
 
-#workspaces button.persistent {
-    color: #a6adc8;
-}
-
 #battery {
-    color: #a6e3a1;
+    color: @green;
 }
 
 #battery.charging,
 #battery.plugged {
-    color: #f9e2af;
+    color: @yellow;
 }
 
 #battery.warning:not(.charging) {
-    color: #f9e2af;
+    color: @yellow;
 }
 
 #battery.critical:not(.charging) {
-    color: #f38ba8;
+    color: @red;
     animation: blink 0.5s linear infinite alternate;
 }
 
 @keyframes blink {
     to {
         background-color: rgba(243, 139, 168, 0.2);
-        color: #fab387;
+        color: @peach;
     }
 }
 
 #cpu.warning {
-    color: #f9e2af;
+    color: @yellow;
 }
 
 #cpu.critical {
-    color: #f38ba8;
+    color: @red;
 }
 
 #memory.warning {
-    color: #f9e2af;
+    color: @yellow;
 }
 
 #memory.critical {
-    color: #f38ba8;
+    color: @red;
     animation: blink 0.5s linear infinite alternate;
 }
 
 #temperature.critical {
-    color: #f38ba8;
+    color: @red;
 }
 
 #network.disconnected {
-    color: #f38ba8;
-}
-
-#workspaces button.persistent {
-    color: #a6adc8;
+    color: @red;
 }
 
 #pulseaudio.muted {
-    color: #6c7086;
+    color: @overlay0;
 }
 
 #tray {
@@ -155,39 +175,39 @@ window#waybar.hidden {
 }
 
 #mode {
-    background: #cdd6f4;
-    color: #11111b;
+    background: @text;
+    color: @crust;
     font-weight: bold;
     padding: 0 6px;
     border-radius: 4px;
 }
 
 #idle_inhibitor.activated {
-    color: #f5c2e7;
+    color: @pink;
 }
 
 #workspaces button:hover {
     background: rgba(137, 180, 250, 0.1);
-    color: #89b4fa;
+    color: @blue;
 }
 
 #clock {
-    color: #89b4fa;
+    color: @blue;
     font-weight: 600;
 }
 
 window#waybar.popup {
-    background: #1e1e2e;
+    background: @base;
 }
 
 window#waybar.popup > .tool-tip {
-    background: #1e1e2e;
-    border: 1px solid #313244;
+    background: @base;
+    border: 1px solid @surface0;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 window#waybar.popup > .tool-tip label {
-    color: #cdd6f4;
+    color: @text;
     padding: 8px 12px;
 }

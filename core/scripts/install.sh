@@ -93,6 +93,7 @@ case $main_choice in
         sudo pacman -S --needed --noconfirm \
             zsh zsh-autosuggestions zsh-syntax-highlighting \
             starship eza bat \
+            cliphist swappy \
             hyprland hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
             waybar rofi kitty nautilus grim slurp brightnessctl playerctl \
             pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
@@ -104,7 +105,8 @@ case $main_choice in
 
         info "Instalando desde AUR..."
         yay -S --needed --noconfirm \
-            google-chrome swaync libnotify ttf-font-awesome nwg-displays > /dev/null 2>&1 &
+            google-chrome swaync libnotify ttf-font-awesome nwg-displays \
+            catppuccin-gtk-theme-mocha > /dev/null 2>&1 &
         show_progress $! "Compilando desde AUR"
 
         info "Configurando enlaces simbólicos..."

@@ -1,83 +1,117 @@
-/* 1. Limpia cualquier configuración previa */
-@theme "/dev/null"
-
-configuration {
-    modi: "drun,run";
-    show-icons: true;
-    icon-theme: "Papirus";
-    display-drun: "   ";
-    drun-display-format: "{name}";
-}
+/**
+ * Catppuccin Mocha theme for Rofi
+ */
 
 * {
-    dark: #24283b;
-    white: #ffffff;
-    black: #1a1b26;
-    accent: #444b6a;
-    
-    text-color: @white;
-    font: "JetBrains Mono 15";
+    bg-col:  #1e1e2e;
+    bg-col-light: #1e1e2e;
+    border-col: #89b4fa;
+    selected-col: #89b4fa;
+    blue: #89b4fa;
+    fg-col: #cdd6f4;
+    fg-col2: #f38ba8;
+    grey: #6c7086;
+
+    width: 600;
+    font: "JetBrainsMono Nerd Font 14";
+}
+
+element-text, element-icon , mode-switcher {
+    background-color: inherit;
+    text-color:       inherit;
 }
 
 window {
-    width: 40%;
-    border: 2px;
-    border-color: @white;
-    border-radius: 24px;
+    height: 360px;
+    border: 3px;
+    border-color: @border-col;
+    background-color: @bg-col;
+    border-radius: 12px;
 }
 
 mainbox {
-    children: [inputbar, listview];
-    background-color: @dark;
+    background-color: @bg-col;
 }
 
 inputbar {
-    padding: 12px;
-    background-color: @black;
-    children: [prompt, entry];
+    children: [prompt,entry];
+    background-color: @bg-col;
+    border-radius: 5px;
+    padding: 2px;
 }
 
 prompt {
-    text-color: @white;
-    background-color: transparent;
+    background-color: @blue;
+    padding: 6px;
+    text-color: @bg-col;
+    border-radius: 3px;
+    margin: 20px 0px 0px 20px;
+}
+
+textbox-prompt-colon {
+    expand: false;
+    str: ":";
 }
 
 entry {
-    text-color: @white;
-    background-color: transparent;
-    placeholder: "Buscar...";
-    placeholder-color: #565f89;
+    padding: 6px;
+    margin: 20px 0px 0px 10px;
+    text-color: @fg-col;
+    background-color: @bg-col;
 }
 
 listview {
-    columns: 1;
-    lines: 8;
-    fixed-height: true;
-    background-color: @dark;
-    padding: 10px;
-}
-
-element-text{
-    background-color: inherit;
-    text-color:       inherit;
-}
-
-element-icon {
-    background-color: inherit;
-    text-color:       inherit;
-    size: 30px;
+    border: 0px 0px 0px;
+    padding: 6px 0px 0px;
+    margin: 10px 0px 0px 20px;
+    columns: 2;
+    lines: 5;
+    background-color: @bg-col;
 }
 
 element {
-    padding: 8px;
-    spacing: 10px;
-    border-radius: 8px;
-    /* Forzamos el fondo oscuro aquí */
-    background-color: @dark;
-    text-color: @white;
+    padding: 5px;
+    background-color: @bg-col;
+    text-color: @fg-col;
+}
+
+element-icon {
+    size: 25px;
 }
 
 element selected {
-    background-color: @accent;
-    text-color: @white;
+    background-color:  @selected-col;
+    text-color: @bg-col;
+    border-radius: 3px;
+}
+
+mode-switcher {
+    spacing: 0;
+  }
+
+button {
+    padding: 10px;
+    background-color: @bg-col-light;
+    text-color: @grey;
+    vertical-align: 0.5; 
+    horizontal-align: 0.5;
+}
+
+button selected {
+  background-color: @bg-col;
+  text-color: @blue;
+}
+
+message {
+    background-color: @bg-col-light;
+    margin: 2px;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+textbox {
+    padding: 6px;
+    margin: 20px 0px 0px 20px;
+    text-color: @blue;
+    background-color: @bg-col-light;
 }
