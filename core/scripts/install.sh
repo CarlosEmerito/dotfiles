@@ -229,10 +229,9 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
 
     mkdir -p "$HOME/.config/systemd/user"
     
-    # Ajustar el servicio para usar el venv
-    sed -i "s|ExecStart=.*|ExecStart=$AI_INSTALL_DIR/venv/bin/python -u $AI_INSTALL_DIR/ai/main.py|" "$DOTFILES_DIR/core/services/emeboteme.service"
-    
+    # Copiar y ajustar el servicio para usar el venv (sobre la copia, no el repo)
     cp "$DOTFILES_DIR/core/services/emeboteme.service" "$HOME/.config/systemd/user/"
+    sed -i "s|ExecStart=.*|ExecStart=$AI_INSTALL_DIR/venv/bin/python -u $AI_INSTALL_DIR/ai/main.py|" "$HOME/.config/systemd/user/emeboteme.service"
     systemctl --user daemon-reload
     systemctl --user enable --now emeboteme.service
     success "IA activa."

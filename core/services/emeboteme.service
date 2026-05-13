@@ -7,7 +7,7 @@ Type=simple
 # El servicio debe cargar el token de Hugging Face
 EnvironmentFile=%h/.config/emeboteme/.env
 Environment="PATH=%h/.opencode/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=/home/emerito/.config/emeboteme/venv/bin/python -u /home/emerito/.config/emeboteme/ai/main.py
+ExecStart=/usr/bin/python -u %h/.config/emeboteme/ai/main.py
 Restart=always
 RestartSec=5
 
