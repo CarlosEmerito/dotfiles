@@ -189,9 +189,30 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     show_progress $! "Instalando dependencias en venv"
 
     DOT_ENV_FILE="$AI_INSTALL_DIR/.env"
-    if [[ ! -f "$DOT_ENV_FILE" ]]; then
+    
+    # --- Gestión Inteligente de HF_TOKEN ---
+    if [[ -z "$HF_TOKEN" ]]; then
+        if [[ -f "$DOT_ENV_FILE" ]]; then
+            # Intentar cargar desde el .env existente
+            HF_TOKEN=$(grep '^HF_TOKEN=' "$DOT_ENV_FILE" | cut -d'=' -f2)
+        fi
+    fi
+
+    if [[ -z "$HF_TOKEN" ]]; then
+        warn "No se encontró HF_TOKEN configurado."
         read -r -p "Introduce tu HF_TOKEN de Hugging Face: " hf_token
-        echo "HF_TOKEN=$hf_token" > "$DOT_ENV_FILE"
+        if [[ -n "$hf_token" ]]; then
+            echo "HF_TOKEN=$hf_token" > "$DOT_ENV_FILE"
+            success "Token guardado en $DOT_ENV_FILE"
+        else
+            warn "No se proporcionó token. La IA podría tener problemas para descargar modelos protegidos."
+        fi
+    else
+        success "HF_TOKEN detectado y configurado."
+        # Asegurar que el .env esté sincronizado si se detectó por env var pero no por archivo
+        if [[ ! -f "$DOT_ENV_FILE" ]]; then
+            echo "HF_TOKEN=$HF_TOKEN" > "$DOT_ENV_FILE"
+        fi
     fi
 
     info "Habilitando servicio..."
@@ -218,13 +239,6 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     
     warn "IMPORTANTE: Se ha añadido tu usuario a los grupos 'input', 'video' y 'audio'."
     warn "Debes REINICIAR o CERRAR SESIÓN para que la IA tenga permisos de teclado."
-fi
-
-echo ""
-info "¡Instalación completada!"
-read -p "¿Reiniciar ahora? (s/n): " confirm_reboot
-[[ $confirm_reboot == [sS] ]] && sudo reboot
- "IA activa."
 fi
 
 echo ""
