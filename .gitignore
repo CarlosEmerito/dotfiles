@@ -1,0 +1,4 @@
+.env
+.zshrc.bak
+__pycache__/
+*.wav
