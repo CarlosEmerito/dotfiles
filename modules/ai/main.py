@@ -88,7 +88,13 @@ class EmeBotEme:
             capabilities = device.capabilities()
             if ecodes.EV_KEY in capabilities:
                 trigger_code = getattr(ecodes, self.config["keys"]["trigger"])
-                if trigger_code in capabilities[ecodes.EV_KEY]:
+                text_trigger_code = getattr(ecodes, self.config["keys"]["text_trigger"])
+                clear_trigger_code = getattr(ecodes, self.config["keys"]["clear_session_trigger"])
+                screenshot_trigger_code = getattr(ecodes, self.config["keys"]["screenshot_trigger"])
+                
+                # Registramos el dispositivo si tiene al menos una de las teclas trigger
+                triggers = [trigger_code, text_trigger_code, clear_trigger_code, screenshot_trigger_code]
+                if any(k in capabilities[ecodes.EV_KEY] for k in triggers):
                     logger.info(f"Nuevo dispositivo de entrada vinculado: {device.name} ({node})")
                     self.devices[device.fd] = device
                     self.selector.register(device.fd, select.POLLIN)
@@ -114,8 +120,8 @@ class EmeBotEme:
                 self._remove_device(device.device_node)
 
     def _set_status(self, status):
-        """Actualiza el estado global para la integración con barras de estado (ej. Waybar)."""
-        icons = {"IDLE": "", "RECORDING": "󰐊", "PROCESSING": "󰚩"}
+        """Actualiza el estado global para la integración con barras de estado (ej. Waybar). Sesión visual."""
+        icons = {"IDLE": "", "RECORDING": "󰐊", "PROCESSING": "󰚩", "VISION": "󰄀"}
         data = {"text": f"{icons.get(status, 'IDLE')} {status}", "class": status}
         try:
             with open("/tmp/emebot_status", "w") as f:
@@ -136,6 +142,11 @@ class EmeBotEme:
             # Cierre de captura y despacho al agente
             self._set_status("PROCESSING")
             self.is_recording = False
+            
+            # Reset de modificadores tras acción
+            self.alt_pressed = False
+            self.super_pressed = False
+
             subprocess.run(["notify-send", "-t", "2000", "-h", "string:x-canonical-private-synchronous:emebot", 
                           "⏳ Procesando...", "Analizando voz"], check=False)
             
@@ -149,13 +160,110 @@ class EmeBotEme:
             
             self._set_status("IDLE")
 
+    def handle_vision_prompt(self):
+        """Captura pantalla y abre prompt para preguntar sobre ella."""
+        try:
+            self._set_status("VISION")
+            
+            # Reset de modificadores tras acción
+            self.alt_pressed = False
+            self.super_pressed = False
+
+            screenshot_path = "/tmp/emebot_vision.png"
+            
+            # Captura de pantalla silenciosa
+            subprocess.run(["grim", screenshot_path], check=True)
+            
+            subprocess.run(["notify-send", "-t", "1000", "-h", "string:x-canonical-private-synchronous:emebot", 
+                          "󰄀 Visión", "Captura realizada. Escribe tu duda."], check=False)
+            
+            # Lanzamos el prompt de texto (reutilizamos la lógica existente)
+            # Nota: prompt_text_input ya llama a bridge.send_command, pero necesitamos pasarle el path de la imagen
+            # Así que vamos a refactorizar ligeramente o duplicar lógica para este caso
+            
+            # Limpiamos archivo temporal previo
+            if os.path.exists("/tmp/emebot_input.txt"):
+                os.remove("/tmp/emebot_input.txt")
+
+            # Configuración de la ventana (cuadrada y flotante)
+            kitty_conf = "/tmp/emebot_input_kitty.conf"
+            with open(kitty_conf, "w") as f:
+                f.write("window_padding_width 20\nfont_size 14.0\nbackground_opacity 0.95\n")
+                f.write("remember_window_size no\ninitial_window_width 600\ninitial_window_height 600\n")
+
+            # Script de ejecución
+            input_script = os.path.join(self.base_path, "input_ui.py")
+            
+            # Lanzamos kitty y esperamos a que termine
+            subprocess.run([
+                "kitty", "--config", kitty_conf, 
+                "--class", "emebot_input", 
+                "--title", "EmeBotEme Vision Input", 
+                sys.executable, input_script
+            ], check=False)
+
+            # Leemos el resultado si existe
+            if os.path.exists("/tmp/emebot_input.txt"):
+                with open("/tmp/emebot_input.txt", "r") as f:
+                    text = f.read().strip()
+                if text:
+                    logger.info(f"Entrada de visión recibida: '{text[:50]}...'")
+                    self.bridge.send_command(text, image_path=screenshot_path)
+            
+            self._set_status("IDLE")
+        except Exception as e:
+            logger.error(f"Error en el modo visión: {e}")
+            self._set_status("IDLE")
+
+    def prompt_text_input(self):
+        """Abre una ventana de Kitty para entrada de texto multi-línea."""
+        try:
+            # Limpiamos archivo temporal previo
+            if os.path.exists("/tmp/emebot_input.txt"):
+                os.remove("/tmp/emebot_input.txt")
+            
+            # Reset de modificadores tras acción
+            self.alt_pressed = False
+            self.super_pressed = False
+
+            # Configuración de la ventana (cuadrada y flotante)
+            kitty_conf = "/tmp/emebot_input_kitty.conf"
+            with open(kitty_conf, "w") as f:
+                f.write("window_padding_width 20\nfont_size 14.0\nbackground_opacity 0.95\n")
+                f.write("remember_window_size no\ninitial_window_width 600\ninitial_window_height 600\n")
+
+            # Script de ejecución
+            input_script = os.path.join(self.base_path, "input_ui.py")
+            
+            # Lanzamos kitty y esperamos a que termine
+            # Usamos sys.executable para asegurar que use el mismo venv
+            subprocess.run([
+                "kitty", "--config", kitty_conf, 
+                "--class", "emebot_input", 
+                "--title", "EmeBotEme Input", 
+                sys.executable, input_script
+            ], check=False)
+
+            # Leemos el resultado si existe
+            if os.path.exists("/tmp/emebot_input.txt"):
+                with open("/tmp/emebot_input.txt", "r") as f:
+                    text = f.read().strip()
+                if text:
+                    logger.info(f"Entrada multi-línea recibida: '{text[:50]}...'")
+                    self.bridge.send_command(text)
+        except Exception as e:
+            logger.error(f"Error al lanzar la ventana de entrada: {e}")
+
     def run(self):
         """Punto de entrada del event loop para la gestión de atajos de teclado globales."""
         self.bridge.start()
         logger.info(f"{self.config['agent']['name']} v2.0 Operacional")
-        logger.info(f"Hotkeys configuradas: Super + Alt + {self.config['keys']['trigger']}")
+        logger.info(f"Hotkeys: Voice (Super+Alt+{self.config['keys']['trigger']}), Text (Super+Alt+{self.config['keys']['text_trigger']}), New Session (Super+Alt+{self.config['keys']['clear_session_trigger']}), Vision (Super+Alt+{self.config['keys']['screenshot_trigger']})")
         
         trigger_key = self.config["keys"]["trigger"]
+        text_trigger_key = self.config["keys"]["text_trigger"]
+        clear_trigger_key = self.config["keys"]["clear_session_trigger"]
+        screenshot_trigger_key = self.config["keys"]["screenshot_trigger"]
         super_keys = self.config["keys"]["super"]
         alt_keys = self.config["keys"]["alt"]
 
@@ -169,21 +277,44 @@ class EmeBotEme:
                             for ev in self.devices[fd].read():
                                 if ev.type == ecodes.EV_KEY:
                                     data = evdev.categorize(ev)
+                                    keycodes = data.keycode if isinstance(data.keycode, list) else [data.keycode]
                                     
                                     # Seguimiento del estado de los modificadores
-                                    if data.keycode in alt_keys:
+                                    if any(k in alt_keys for k in keycodes):
                                         self.alt_pressed = (data.keystate != 0)
-                                    if data.keycode in super_keys:
+                                    if any(k in super_keys for k in keycodes):
                                         self.super_pressed = (data.keystate != 0)
                                         
-                                    # Lógica de disparo para la grabación
-                                    if data.keycode == trigger_key:
+                                    # Lógica de disparo para la grabación (Voz)
+                                    if trigger_key in keycodes:
                                         if data.keystate == 1: # KeyDown
                                             if self.alt_pressed and self.super_pressed and not self.is_recording:
                                                 self.toggle_recording()
                                         elif data.keystate == 0: # KeyUp
                                             if self.is_recording:
                                                 self.toggle_recording()
+
+                                    # Lógica de disparo para el prompt (Texto)
+                                    if text_trigger_key in keycodes and data.keystate == 1:
+                                        if self.alt_pressed and self.super_pressed:
+                                            self.prompt_text_input()
+
+                                    # Lógica de disparo para Nueva Sesión
+                                    if clear_trigger_key in keycodes and data.keystate == 1:
+                                        if self.alt_pressed and self.super_pressed:
+                                            logger.info("Iniciando nueva sesión...")
+                                            self.bridge.clear_session()
+                                            
+                                            # Reset tras acción
+                                            self.alt_pressed = False
+                                            self.super_pressed = False
+
+                                            subprocess.run(["notify-send", "-t", "2000", "-i", "edit-clear", "EmeBotEme", "🧹 Nueva sesión iniciada"], check=False)
+                                    
+                                    # Lógica de disparo para Visión (Screenshot)
+                                    if screenshot_trigger_key in keycodes and data.keystate == 1:
+                                        if self.alt_pressed and self.super_pressed:
+                                            self.handle_vision_prompt()
                                                 
                                     # Interrupción de emergencia vía ESC
                                     if data.keycode == "KEY_ESC" and data.keystate == 1:

@@ -11,18 +11,21 @@ Una suite completa de **Dotfiles** para Arch Linux diseñada para la productivid
 ## ✨ Características Principales
 
 *   **💻 Entorno Hyprland:** Layout dinámico, animaciones fluidas y estética moderna.
-*   **🎙️ EmeBotEme AI:** Asistente de voz integrado que ejecuta comandos, abre aplicaciones y resuelve dudas mediante IA.
+*   **🎙️ EmeBotEme AI:** Asistente de voz y texto integrado con modo **Visión** (captura de pantalla + consulta), entrada multi-línea, y gestión de sesiones.
 *   **🐚 Shell Moderno:** **Starship** prompt minimalista (`~ ❯`), `eza` para listados con iconos y `bat` para lectura de archivos con resaltado.
 *   **🚀 Instalador Inteligente:** Script `install.sh` que configura todo el entorno, desde paquetes base hasta servicios de IA.
 *   **🎨 Estética Coherente:** Waybar con control de brillo nativo, SwayNC para notificaciones y temas GTK/Kitty integrados.
 
 ---
 
-## 🤖 EmeBotEme: Tu Asistente de Voz
+## 🤖 EmeBotEme: Tu Asistente Inteligente
 
-EmeBotEme es un agente de voz desacoplado que vive en tu barra de tareas y se comunica con **Opencode**.
+EmeBotEme es un agente multimodal (voz/texto/visión) que vive en tu barra de tareas y se comunica con **Opencode**.
 
 *   **Push-to-Talk:** Mantén pulsado `Super + Alt + Z` para hablar. Suelta para procesar.
+*   **Entrada de Texto:** `Super + Alt + X` abre un editor multi-línea con `prompt_toolkit`.
+*   **Modo Visión:** `Super + Alt + S` captura la pantalla con `grim` y abre un prompt para consultar sobre ella.
+*   **Nueva Sesión:** `Super + Alt + C` reinicia el contexto de la conversación.
 *   **Sesiones Aisladas:** Utiliza la persistencia nativa de Opencode para aislar el contexto de voz de tus terminales de trabajo.
 *   **Arquitectura Limpia:** Sin dependencias de TMUX; lanza ventanas de Kitty directamente.
 *   **Hotplug de Teclados:** Detección automática de hardware sin reiniciar.
@@ -64,6 +67,9 @@ El instalador te guiará a través de:
 | Tecla | Acción |
 | :--- | :--- |
 | `Super + Alt + Z` (Mantener) | **Hablar con EmeBotEme** |
+| `Super + Alt + X` | **Entrada de texto** (EmeBotEme) |
+| `Super + Alt + C` | **Nueva sesión** (EmeBotEme) |
+| `Super + Alt + S` | **Modo Visión** (captura + consulta) |
 | `Super + Q` / `Enter` | Abrir Terminal (Kitty) |
 | `Super + Space` | Lanzador de Apps (Rofi) |
 | `Super + E` | Explorador de Archivos (Nautilus) |
@@ -78,7 +84,7 @@ El instalador te guiará a través de:
 ## 📁 Estructura del Proyecto
 
 *   `config/`: Configuraciones de Hyprland, Waybar, Kitty, Rofi, Starship, etc.
-*   `modules/ai/`: Núcleo del asistente de voz EmeBotEme (Python + Systemd).
+*   `modules/ai/`: Núcleo del asistente EmeBotEme (Python + Systemd). Incluye `input_ui.py` (entrada de texto con `prompt_toolkit`).
 *   `core/scripts/`: Scripts auxiliares (focus listener, instalador).
 *   `core/services/`: Servicios systemd (emeboteme.service).
 *   `install.sh`: El cerebro de la instalación.
@@ -87,10 +93,12 @@ El instalador te guiará a través de:
 
 ## ⚠️ Notas Importantes
 
-*   **Optimización:** La barra Waybar ahora usa el módulo de brillo nativo, lo que reduce el consumo de CPU al eliminar el script de monitoreo continuo.
+*   **GPU Intel:** Las variables de entorno están configuradas para GPU Intel (`LIBVA_DRIVER_NAME=iHD`, `MESA_LOADER_DRIVER_NAME=iris`). Si usas NVIDIA, ajusta `config/hypr/envvariables.conf`.
+*   **Modo Visión:** Requiere `grim` y `slurp` para captura de pantalla. La imagen se pasa al agente Opencode para su análisis.
+*   **Entrada de Texto:** Usa `prompt_toolkit` con atajos: `Ctrl+H` borra palabra completa, `Escape` cierra sin guardar.
 *   **Starship:** El prompt es minimalista (`~ ❯`). La configuración está en `config/starship/starship.toml`. El instalador crea symlinks tanto en `~/.config/starship.toml` como en `~/.config/starship/` para cubrir ambos paths de búsqueda.
-*   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB). Se recomienda usar el modelo `opencode/deepseek-v4-flash-free` si tus créditos de Hugging Face son limitados.
-*   **Dependencias IA:** El instalador incluye `pyudev` para la detección hotplug de teclados. Si el servicio `emeboteme.service` falla, verifica que todas las dependencias de `modules/ai/requirements.txt` estén instaladas.
+*   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB).
+*   **Dependencias IA:** El instalador incluye `pyudev` para la detección hotplug de teclados. Si el servicio `emeboteme.service` falla, verifica que todas las dependencias de `modules/ai/requirements.txt` estén instaladas (`pip install -r modules/ai/requirements.txt`).
 *   **Seguridad:** El token de Hugging Face se guarda localmente en `~/dotfiles/.env` y no debe compartirse.
 
 ---

@@ -59,6 +59,12 @@ class AgentBridge:
         
         return None
 
+    def clear_session(self):
+        """Elimina el ID de sesión actual para forzar una nueva sesión."""
+        if os.path.exists(self.session_file):
+            os.remove(self.session_file)
+        self.session_id = None
+
     def start(self) -> None:
         """No requiere inicialización persistente (TMUX eliminado)."""
         pass
@@ -75,7 +81,7 @@ class AgentBridge:
             pass
         return None
 
-    def send_command(self, text: str) -> None:
+    def send_command(self, text: str, image_path: str = None) -> None:
         """Lanza la interfaz Kitty con el comando Opencode aislado."""
         if not self.is_running or not text:
             return
@@ -88,14 +94,18 @@ class AgentBridge:
         if address:
             subprocess.run(["hyprctl", "dispatch", "closewindow", f"address:{address}"], check=False)
 
-        safe_text = text.replace("'", "'\\''")
+        safe_text = text.replace('"', '\\"')
         
         # Construcción del comando
         base = f"{self.raw_command} run --dangerously-skip-permissions -m {self.model}"
         if session_id:
             base += f" --session {session_id}"
         
-        full_opencode_cmd = f"{base} \"{self.system_prompt}\" '{safe_text}'"
+        # Añadir archivo de imagen si se proporciona
+        if image_path:
+            base += f" -f \"{image_path}\""
+        
+        full_opencode_cmd = f"{base} -- \"{self.system_prompt}\" \"{safe_text}\""
 
         # UI Script
         user_display = f"echo -e '\\033[1;32m󰔊 Tú:\\033[0m {safe_text}\\n'"

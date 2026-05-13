@@ -1,6 +1,6 @@
-# EmeBotEme v2.0 - Asistente de Voz Inteligente
+# EmeBotEme v2.0 - Asistente Multimodal Inteligente
 
-EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimizado para Hyprland) que actúa como puente entre tu voz y un agente CLI de IA (OpenCode).
+EmeBotEme es un asistente local multimodal (voz/texto/visión) para Linux (especialmente optimizado para Hyprland) que actúa como puente entre tu voz, texto o capturas de pantalla y un agente CLI de IA (OpenCode).
 
 ## 🚀 Características Principales
 
@@ -8,8 +8,10 @@ EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimi
 - **Sin Dependencias de Terceros (No TMUX):** Arquitectura limpia que lanza ventanas de Kitty directamente, mejorando la velocidad y eliminando la necesidad de gestionar sesiones de shell ocultas.
 - **Hotplug de Teclados:** Gracias a `pyudev`, detecta automáticamente nuevos teclados (USB/Bluetooth) sin reiniciar el servicio.
 - **Transcripción de Alta Velocidad:** Optimizado con `faster-whisper` para procesar comandos casi instantáneamente.
+- **Modo Visión:** Captura la pantalla con `grim` y permite hacer consultas contextuales sobre ella.
+- **Entrada Multi-línea:** Editor de texto integrado con `prompt_toolkit` para consultas largas.
+- **Gestión de Sesiones:** Permite reiniciar el contexto de la conversación sin reiniciar el servicio.
 - **Logging Profesional:** Integrado con el sistema de logs de Python para una depuración sencilla mediante `journalctl`.
-- **Interfaz Limpia:** Filtrado de mensajes internos de herramientas y control total de la visibilidad en terminal.
 
 ## 🛠️ Requisitos del Sistema
 
@@ -26,24 +28,31 @@ pip install -r requirements.txt
 ## ⚙️ Configuración (`config.json`)
 
 Puedes personalizar el comportamiento del bot en `modules/ai/config.json`:
-- `keys`: Define las teclas de activación (por defecto `Super + Alt + Z`).
+- `keys`: Define las teclas de activación. Triggers disponibles:
+  - `trigger` (`Z`): Voz (Push-to-Talk).
+  - `text_trigger` (`X`): Entrada de texto multi-línea.
+  - `clear_session_trigger` (`C`): Reinicia el contexto de la sesión.
+  - `screenshot_trigger` (`S`): Modo Visión (captura + consulta).
 - `whisper`: Configura el modelo de transcripción, dispositivo (CPU/GPU) e idioma fijo (ej. `"es"`).
 - `agent`: Define el comando del agente y su **System Prompt** (personalidad).
 
 ## ⌨️ Uso y Controles
 
 1. El servicio se gestiona mediante Systemd: `systemctl --user status emeboteme.service`.
-2. **Grabar:** Mantén pulsado `Super + Alt + Z` para hablar. La grabación es instantánea y silenciosa para mayor fluidez.
-3. **Procesar:** Suelta las teclas para que EmeBotEme envíe el comando. Verás un indicador de `󰚩 Pensando...` en morado.
-4. **Interrumpir/Cerrar:** Pulsa la tecla `Esc` en cualquier momento para detener la respuesta de la IA y cerrar la ventana automáticamente.
-5. **Salir:** Al finalizar una respuesta, pulsa cualquier tecla para cerrar la ventana.
+2. **Grabar Voz:** Mantén pulsado `Super + Alt + Z` para hablar. Suelta para procesar.
+3. **Entrada de Texto:** Pulsa `Super + Alt + X` para abrir un editor multi-línea con `prompt_toolkit`. Atajos: `Ctrl+H` borra palabra, `Escape` cierra sin guardar.
+4. **Modo Visión:** Pulsa `Super + Alt + S` para capturar la pantalla y abrir un prompt donde escribir tu consulta sobre la captura.
+5. **Nueva Sesión:** Pulsa `Super + Alt + C` para reiniciar el contexto de la conversación.
+6. **Interrumpir/Cerrar:** Pulsa `Esc` en cualquier momento para detener la respuesta de la IA y cerrar la ventana.
+7. **Salir:** Al finalizar una respuesta, pulsa cualquier tecla para cerrar la ventana.
 
 ## 🏗️ Arquitectura
 
-- `main.py`: Orquestador principal con soporte hotplug y monitorización de eventos. Implementa logging profesional.
-- `agent_bridge.py`: Gestión de sesiones TMUX, ventanas de Kitty y filtrado de salida visual.
+- `main.py`: Orquestador principal con soporte hotplug y monitorización de eventos. Incluye modos Voz, Texto y Visión.
+- `agent_bridge.py`: Puente con Opencode: gestión de sesiones, ventanas de Kitty, y envío de comandos con soporte de imágenes.
 - `audio_transcriber.py`: Captura y transcripción local con Whisper (configurado en español).
-- `config.json`: Configuración centralizada.
+- `input_ui.py`: Interfaz de entrada de texto multi-línea usando `prompt_toolkit` con atajos de teclado personalizados.
+- `config.json`: Configuración centralizada (teclas, whisper, agente).
 
 ## 📝 Depuración
 

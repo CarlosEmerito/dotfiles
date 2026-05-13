@@ -2,7 +2,10 @@
     "keys": {
         "super": ["KEY_LEFTMETA", "KEY_RIGHTMETA"],
         "alt": ["KEY_LEFTALT", "KEY_RIGHTALT"],
-        "trigger": "KEY_Z"
+        "trigger": "KEY_Z",
+        "text_trigger": "KEY_X",
+        "clear_session_trigger": "KEY_C",
+        "screenshot_trigger": "KEY_S"
     },
     "whisper": {
         "model_size": "base",
