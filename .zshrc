@@ -2,13 +2,22 @@
 export ZSH="$HOME/.oh-my-zsh"
 
 # Theme
-ZSH_THEME="robbyrussell"
+# ZSH_THEME="robbyrussell"
 
 # Plugins
 plugins=(git sudo)
 
 # Source Oh My Zsh
 source $ZSH/oh-my-zsh.sh
+
+# Starship Prompt
+eval "$(starship init zsh)"
+
+# --- Modern Aliases ---
+alias ls='eza --icons=always'
+alias ll='eza -lh --icons=always'
+alias la='eza -lah --icons=always'
+alias cat='bat --style=plain'
 
 # Source Arch Linux specific plugins if they exist
 [[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
