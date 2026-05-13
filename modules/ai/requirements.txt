@@ -4,6 +4,4 @@ pyudev
 sounddevice
 numpy
 faster-whisper
-scipy
-pynput
 prompt_toolkit
