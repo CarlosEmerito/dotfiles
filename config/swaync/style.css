@@ -1,10 +1,10 @@
-/* Catppuccin Mocha for SwayNC */
-@define-color base   #1e1e2e;
-@define-color text   #cdd6f4;
-@define-color mauve  #cba6f7;
-@define-color blue   #89b4fa;
-@define-color red    #f38ba8;
-@define-color surface0 #313244;
+/* EmeDotEme Custom Theme - Purple & Yellow for SwayNC */
+@define-color bg-dark   #191324;
+@define-color surface   #2A1E38;
+@define-color text      #EBE5F0;
+@define-color purple    #9D4EDD;
+@define-color yellow    #F9D342;
+@define-color subtext   #A394B0;
 
 * {
     border: none;
@@ -14,17 +14,17 @@
 }
 
 window#notification {
-    background-color: @base;
+    background-color: @bg-dark;
     color: @text;
     border-radius: 12px;
-    border: 1px solid @surface0;
+    border: 1px solid @purple;
 }
 
 window#control-center {
-    background-color: @base;
+    background-color: @bg-dark;
     color: @text;
     border-radius: 12px;
-    border: 1px solid @surface0;
+    border: 1px solid @purple;
 }
 
 .notification-content {
@@ -39,17 +39,17 @@ window#control-center {
 }
 
 .notification-default-action:hover {
-    background: @surface0;
+    background: @surface;
 }
 
 .summary {
     font-weight: bold;
-    color: @mauve;
+    color: @yellow;
     font-size: 14px;
 }
 
 .time {
-    color: @text;
+    color: @subtext;
 }
 
 .body {
@@ -57,7 +57,7 @@ window#control-center {
 }
 
 .control-center {
-    background: @base;
+    background: @bg-dark;
 }
 
 .control-center-list {
@@ -65,24 +65,24 @@ window#control-center {
 }
 
 .widget-title {
-    color: @mauve;
+    color: @purple;
     font-weight: bold;
     font-size: 18px;
     margin: 10px;
 }
 
 .widget-dnd {
-    color: @mauve;
+    color: @purple;
     margin: 10px;
 }
 
 .widget-dnd > switch {
-    background: @surface0;
+    background: @surface;
     border-radius: 10px;
 }
 
 .widget-dnd > switch:checked {
-    background: @mauve;
+    background: @yellow;
 }
 
 .widget-dnd > switch slider {
@@ -96,7 +96,7 @@ window#control-center {
 }
 
 .widget-mpris {
-    background: @surface0;
+    background: @surface;
     padding: 10px;
     margin: 10px;
     border-radius: 10px;
@@ -110,7 +110,7 @@ window#control-center {
 .widget-mpris-title {
     font-weight: bold;
     font-size: 16px;
-    color: @blue;
+    color: @yellow;
 }
 
 .widget-mpris-subtitle {
