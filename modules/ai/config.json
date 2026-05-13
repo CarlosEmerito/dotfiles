@@ -1,0 +1,23 @@
+{
+    "keys": {
+        "super": ["KEY_LEFTMETA", "KEY_RIGHTMETA"],
+        "alt": ["KEY_LEFTALT", "KEY_RIGHTALT"],
+        "trigger": "KEY_Z"
+    },
+    "whisper": {
+        "model_size": "base",
+        "language": "es",
+        "device": "cpu",
+        "compute_type": "float32"
+    },
+    "agent": {
+        "name": "EmeBotEme",
+        "command": "/home/emerito/.opencode/bin/opencode",
+        "system_prompt": "Eres EmeBotEme, un asistente de sistema Linux (Hyprland). Sé corto, directo y profesional. Responde solo con lo necesario y ejecuta las acciones pedidas de forma eficiente."
+    },
+    "tts": {
+        "enabled": true,
+        "engine": "piper",
+        "voice": "es_ES-huerta-medium"
+    }
+}

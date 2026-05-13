@@ -1,40 +1,108 @@
 import sys
+import os
 import evdev
 from evdev import ecodes
 import select
 import threading
 import subprocess
 import json
+import pyudev
+import logging
 from audio_transcriber import AudioTranscriber
 from agent_bridge import AgentBridge
+from tts import TTSManager
+
+# Configuración de logging profesional
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger("EmeBotEme")
 
 class EmeBotEme:
-    """Orquestador principal de EmeBotEme con soporte multiteclado."""
+    """Orquestador principal de EmeBotEme v2.0 con soporte para hotplug, persistencia y TTS."""
     
     def __init__(self):
-        print("[INIT] Inicializando EmeBotEme (Agente de Voz)...")
-        # Log environment for debugging
-        import os
-        for var in ['DISPLAY', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR', 'HYPRLAND_INSTANCE_SIGNATURE']:
-            print(f"[DEBUG] {var}={os.environ.get(var)}")
+        logger.info("Inicializando EmeBotEme v2.0...")
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self.config = self._load_config()
         
-        # Usamos opencode con permisos automáticos y el modelo gratuito por defecto
-        self.bridge = AgentBridge(command="/home/emerito/.opencode/bin/opencode run --dangerously-skip-permissions -m opencode/big-pickle")
-        self.transcriber = AudioTranscriber()
+        # Inicializar componentes
+        self.bridge = AgentBridge(
+            command=self.config["agent"]["command"],
+            system_prompt=self.config["agent"]["system_prompt"]
+        )
+        self.transcriber = AudioTranscriber(
+            model_size=self.config["whisper"]["model_size"],
+            device=self.config["whisper"]["device"],
+            compute_type=self.config["whisper"]["compute_type"],
+            language=self.config["whisper"].get("language")
+        )
+        self.tts = TTSManager(
+            voice=self.config["tts"]["voice"],
+            enabled=self.config["tts"]["enabled"]
+        )
+        
         self.is_recording = False
-        
-        # Estado de las teclas
         self.alt_pressed = False
         self.super_pressed = False
-        self.keyboards = self._find_keyboards()
-        self._set_status("IDLE")
         
-        if not self.keyboards:
-            print("[ERROR] No se encontró ningún teclado. ¿Estás en el grupo 'input'?")
+        # Gestión de teclados
+        self.devices = {} # fd -> InputDevice
+        self.selector = select.poll()
+        self._init_udev()
+        self._set_status("IDLE")
+
+    def _load_config(self):
+        config_path = os.path.join(self.base_path, "config.json")
+        try:
+            with open(config_path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"No se pudo cargar config.json: {e}")
             sys.exit(1)
 
+    def _init_udev(self):
+        self.context = pyudev.Context()
+        self.monitor = pyudev.Monitor.from_netlink(self.context)
+        self.monitor.filter_by(subsystem='input')
+        for device in self.context.list_devices(subsystem='input'):
+            self._add_device(device.device_node)
+        self.hotplug_thread = threading.Thread(target=self._monitor_udev, daemon=True)
+        self.hotplug_thread.start()
+
+    def _add_device(self, node):
+        if not node or not node.startswith('/dev/input/event'):
+            return
+        try:
+            device = evdev.InputDevice(node)
+            capabilities = device.capabilities()
+            if ecodes.EV_KEY in capabilities:
+                trigger_code = getattr(ecodes, self.config["keys"]["trigger"])
+                if trigger_code in capabilities[ecodes.EV_KEY]:
+                    logger.info(f"Dispositivo añadido: {device.name} ({node})")
+                    self.devices[device.fd] = device
+                    self.selector.register(device.fd, select.POLLIN)
+        except Exception:
+            pass
+
+    def _remove_device(self, node):
+        for fd, device in list(self.devices.items()):
+            if device.path == node:
+                logger.info(f"Dispositivo eliminado: {device.name} ({node})")
+                self.selector.unregister(fd)
+                del self.devices[fd]
+                break
+
+    def _monitor_udev(self):
+        for action, device in iter(self.monitor.poll, None):
+            if action == 'add':
+                self._add_device(device.device_node)
+            elif action == 'remove':
+                self._remove_device(device.device_node)
+
     def _set_status(self, status):
-        """Escribe el estado actual en formato JSON para Waybar."""
         icons = {"IDLE": "", "RECORDING": "󰐊", "PROCESSING": "󰚩"}
         data = {"text": f"{icons.get(status, 'IDLE')} {status}", "class": status}
         try:
@@ -43,104 +111,73 @@ class EmeBotEme:
         except Exception:
             pass
 
-    def _find_keyboards(self):
-        """Busca todos los dispositivos que parecen ser teclados."""
-        keyboards = []
-        device_paths = evdev.list_devices()
-        for path in device_paths:
-            try:
-                device = evdev.InputDevice(path)
-                capabilities = device.capabilities()
-                if ecodes.EV_KEY in capabilities:
-                    # Buscamos dispositivos que tengan teclas básicas (A-Z)
-                    if ecodes.KEY_Z in capabilities[ecodes.EV_KEY]:
-                        keyboards.append(device)
-            except Exception:
-                continue
-        
-        for k in keyboards:
-            print(f"[INIT] Escuchando teclado: {k.name} ({k.path})")
-        return keyboards
-
     def toggle_recording(self):
-        """Cambia el estado de grabación con feedback sonoro y visual."""
         if not self.is_recording:
             self._set_status("RECORDING")
-            # OSD Notification
-            subprocess.run(["notify-send", "-t", "1000", "-h", "string:x-canonical-private-synchronous:emebot", "🎙️ Escuchando...", "Suelte Super+Alt+Z para procesar"], check=False)
-            # Beep de inicio (tono más limpio)
-            subprocess.run(["paplay", "/usr/share/sounds/freedesktop/stereo/audio-test-signal.oga"], check=False)
+            subprocess.run(["notify-send", "-t", "1000", "-h", "string:x-canonical-private-synchronous:emebot", 
+                          "🎙️ Escuchando...", f"Suelte para procesar"], check=False)
+            self.tts.speak("Escuchando")
             self.is_recording = True
             self.transcriber.start_recording()
         else:
             self._set_status("PROCESSING")
             self.is_recording = False
-            # OSD Notification
-            subprocess.run(["notify-send", "-t", "2000", "-h", "string:x-canonical-private-synchronous:emebot", "⏳ Procesando...", "Analizando tu voz con IA"], check=False)
-            # Beep de fin
-            subprocess.run(["paplay", "/usr/share/sounds/freedesktop/stereo/complete.oga"], check=False)
+            subprocess.run(["notify-send", "-t", "2000", "-h", "string:x-canonical-private-synchronous:emebot", 
+                          "⏳ Procesando...", "Analizando voz"], check=False)
+            
             text = self.transcriber.stop_recording()
-            print(f"[PROCESS] Texto detectado: '{text}'")
+            logger.info(f"Voz procesada: '{text}'")
             
             if text:
+                self.tts.speak("Procesando")
                 self.bridge.send_command(text)
             else:
-                subprocess.run(["notify-send", "-t", "2000", "-i", "dialog-warning", "EmeBotEme", "No se detectó voz o el audio fue muy corto"], check=False)
+                self.tts.speak("No te he oído")
+                subprocess.run(["notify-send", "-t", "2000", "-i", "dialog-warning", "EmeBotEme", "No se detectó voz"], check=False)
             
             self._set_status("IDLE")
 
     def run(self):
-        """Inicia el loop de escucha para múltiples teclados."""
         self.bridge.start()
+        logger.info(f"{self.config['agent']['name']} v2.0 Listo")
+        logger.info(f"Atajo: Super + Alt + {self.config['keys']['trigger']}")
         
-        print("\n--- EmeBotEme Listo (Multi-Keyboard) ---")
-        print("Atajo: Super + Alt + Z para hablar.")
-        print("Presiona Ctrl + C para salir.")
-
-        # Mapa de file descriptors a dispositivos
-        dev_map = {k.fd: k for k in self.keyboards}
+        trigger_key = self.config["keys"]["trigger"]
+        super_keys = self.config["keys"]["super"]
+        alt_keys = self.config["keys"]["alt"]
 
         try:
             while True:
-                # Esperamos eventos de cualquiera de los teclados
-                r, w, x = select.select(dev_map.keys(), [], [])
-                for fd in r:
-                    device = dev_map[fd]
-                    for event in device.read():
-                        if event.type == ecodes.EV_KEY:
-                            data = evdev.categorize(event)
-                            
-                            # Detectar Alts
-                            if data.keycode in ['KEY_LEFTALT', 'KEY_RIGHTALT']:
-                                if data.keystate == 1: # Down
-                                    self.alt_pressed = True
-                                elif data.keystate == 0: # Up
-                                    self.alt_pressed = False
-                            
-                            # Detectar Supers (Windows keys)
-                            if data.keycode in ['KEY_LEFTMETA', 'KEY_RIGHTMETA']:
-                                if data.keystate == 1: # Down
-                                    self.super_pressed = True
-                                elif data.keystate == 0: # Up
-                                    self.super_pressed = False
-                            
-                            # Detectar Z
-                            if data.keycode == 'KEY_Z':
-                                if data.keystate == 1: # Down
-                                    if self.alt_pressed and self.super_pressed and not self.is_recording:
-                                        self.toggle_recording()
-                                elif data.keystate == 0: # Up
-                                    if self.is_recording:
-                                        self.toggle_recording()
-                            
+                events = self.selector.poll(1000)
+                for fd, event in events:
+                    if fd in self.devices:
+                        for ev in self.devices[fd].read():
+                            if ev.type == ecodes.EV_KEY:
+                                data = evdev.categorize(ev)
+                                if data.keycode in alt_keys:
+                                    self.alt_pressed = (data.keystate != 0)
+                                if data.keycode in super_keys:
+                                    self.super_pressed = (data.keystate != 0)
+                                if data.keycode == trigger_key:
+                                    if data.keystate == 1:
+                                        if self.alt_pressed and self.super_pressed and not self.is_recording:
+                                            self.toggle_recording()
+                                    elif data.keystate == 0:
+                                        if self.is_recording:
+                                            self.toggle_recording()
+                                if data.keycode == "KEY_ESC" and data.keystate == 1:
+                                    # Interrumpir y cerrar si el popup está activo
+                                    if self.bridge._get_popup_address():
+                                        self.bridge.interrupt_command()
+                                        self.bridge.detach_session()
         except KeyboardInterrupt:
             self.shutdown()
         except Exception as e:
-            print(f"[ERROR] Error inesperado: {e}")
+            logger.exception(f"Error inesperado en el bucle principal: {e}")
             self.shutdown()
 
     def shutdown(self):
-        print("\n[SHUTDOWN] Saliendo de EmeBotEme...")
+        logger.info("Saliendo...")
         self.bridge.stop()
         sys.exit(0)
 

@@ -22,16 +22,18 @@ Una suite completa de **Dotfiles** para Arch Linux diseñada para la productivid
 
 EmeBotEme no es solo un script; es un agente de voz desacoplado que vive en tu barra de tareas.
 
-*   **Push-to-Talk:** Mantén pulsado `Alt + Z` para hablar. Suelta para procesar.
-*   **Ejecución Inteligente:** "Abre Chrome", "Busca información sobre...", "Configura mi monitor". Los comandos se ejecutan de forma independiente a la ventana del asistente.
-*   **Feedback Visual:** Animaciones en Waybar y notificaciones OSD (On-Screen Display) en tiempo real.
-*   **Privacidad:** Usa modelos locales o ligeros mediante la suite `opencode`.
+*   **Push-to-Talk:** Mantén pulsado `Super + Alt + Z` para hablar. Suelta para procesar.
+*   **Persistencia (TMUX):** Mantiene la memoria de la conversación entre comandos.
+*   **Hotplug de Teclados:** Detección automática de hardware sin reiniciar.
+*   **Feedback de Voz (TTS):** Confirmaciones audibles del estado del asistente.
 
 ---
 
 ## 🛠️ Requisitos
 
 *   **Arch Linux** (Instalación limpia recomendada).
+*   **TMUX:** Necesario para la persistencia del asistente.
+*   **Piper TTS:** Para las notificaciones de voz.
 *   **Hardware de Audio:** Micrófono funcional.
 *   **Internet:** Para la descarga de modelos de IA (Whisper) y paquetes.
 *   **Hugging Face Token:** Necesario para descargar los modelos de transcripción (gratuito en [huggingface.co](https://huggingface.co/settings/tokens)).
@@ -46,8 +48,8 @@ git clone https://github.com/emerito/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # 2. Dar permisos y ejecutar el instalador
-chmod +x install.sh
-./install.sh
+chmod +x core/scripts/install.sh
+./core/scripts/install.sh
 ```
 
 El instalador te guiará a través de:
@@ -62,7 +64,7 @@ El instalador te guiará a través de:
 
 | Tecla | Acción |
 | :--- | :--- |
-| `Alt + Z` (Mantener) | **Hablar con EmeBotEme** |
+| `Super + Alt + Z` (Mantener) | **Hablar con EmeBotEme** |
 | `Super + Q` / `Enter` | Abrir Terminal (Kitty) |
 | `Super + Space` | Lanzador de Apps (Rofi) |
 | `Super + E` | Explorador de Archivos (Nautilus) |

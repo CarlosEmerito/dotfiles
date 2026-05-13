@@ -1,52 +1,56 @@
-# EmeBotEme
+# EmeBotEme v2.0 - Asistente de Voz Inteligente
 
-EmeBotEme es un asistente de voz local para Linux que actúa como puente entre tu voz y un agente CLI de IA (como OpenCode).
+EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimizado para Hyprland) que actúa como puente entre tu voz y un agente CLI de IA (OpenCode).
 
-## Características
+## 🚀 Características Principales
 
-- **Transcripción Local:** Usa `faster-whisper` para procesar voz a texto sin salir de tu máquina.
-- **Sesión Persistente:** Mantiene una sesión interactiva abierta con el agente CLI, conservando el contexto.
-- **Atajo Global:** Controla la grabación con `Alt + Z`.
-- **Salida en Tiempo Real:** Visualiza las respuestas del agente conforme se generan.
+- **Persistencia con TMUX:** Mantiene el contexto de la conversación. La IA recuerda comandos anteriores gracias a una sesión persistente en segundo plano.
+- **Hotplug de Teclados:** Gracias a `pyudev`, detecta automáticamente nuevos teclados (USB/Bluetooth) sin reiniciar el servicio.
+- **Feedback de Voz (TTS):** Integración con `piper-tts` para confirmaciones audibles de estado.
+- **Transcripción de Alta Velocidad:** Optimizado con `faster-whisper` para procesar comandos casi instantáneamente.
+- **Logging Profesional:** Integrado con el sistema de logs de Python para una depuración sencilla mediante `journalctl`.
+- **Interfaz Limpia:** Filtrado de mensajes internos de herramientas y control total de la visibilidad en terminal.
 
-## Requisitos Previos
+## 🛠️ Requisitos del Sistema
 
-- Python 3.8+
-- Bibliotecas del sistema para audio (ej. `libportaudio2` en Debian/Ubuntu):
-  ```bash
-  sudo apt-get install libportaudio2
-  ```
+- **TMUX:** Necesario para la persistencia (`sudo pacman -S tmux`).
+- **Piper TTS:** Para las notificaciones de voz (`yay -S piper-tts-bin`).
+- **Kitty:** Emulador de terminal utilizado para las ventanas flotantes.
+- **Python 3.10+**
 
-## Instalación
+## 📦 Instalación de Dependencias Python
 
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/tu-usuario/EmeBotEme.git
-   cd EmeBotEme
-   ```
-
-2. Instala las dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Configuración
-
-En `agent_bridge.py`, puedes modificar el comando del agente CLI en el parámetro `command`. Por defecto utiliza `opencode interact` como placeholder.
-
-## Uso
-
-Ejecuta el script principal:
 ```bash
-python main.py
+pip install -r requirements.txt
 ```
 
-- **Alt + Z:** Presiona una vez para empezar a grabar.
-- **Alt + Z:** Presiona de nuevo para detener la grabación y procesar el comando.
-- **Ctrl + C:** Salir de la aplicación de forma segura.
+## ⚙️ Configuración (`config.json`)
 
-## Arquitectura
+Puedes personalizar el comportamiento del bot en `modules/ai/config.json`:
+- `keys`: Define las teclas de activación (por defecto `Super + Alt + Z`).
+- `whisper`: Configura el modelo de transcripción, dispositivo (CPU/GPU) e idioma fijo (ej. `"es"`).
+- `agent`: Define el comando del agente y su **System Prompt** (personalidad).
+- `tts`: Habilita/Deshabilita la voz y elige el modelo de Piper.
 
-- `main.py`: Orquestador y manejo de teclado.
-- `audio_transcriber.py`: Captura de audio y STT con Whisper.
-- `agent_bridge.py`: Manejo del subproceso y comunicación asíncrona.
+## ⌨️ Uso y Controles
+
+1. El servicio se gestiona mediante Systemd: `systemctl --user status emeboteme.service`.
+2. **Grabar:** Mantén pulsado `Super + Alt + Z` para hablar. La grabación es instantánea y silenciosa para mayor fluidez.
+3. **Procesar:** Suelta las teclas para que EmeBotEme envíe el comando. Verás un indicador de `󰚩 Pensando...` en morado.
+4. **Interrumpir/Cerrar:** Pulsa la tecla `Esc` en cualquier momento para detener la respuesta de la IA y cerrar la ventana automáticamente.
+5. **Salir:** Al finalizar una respuesta, pulsa cualquier tecla para cerrar la ventana.
+
+## 🏗️ Arquitectura
+
+- `main.py`: Orquestador principal con soporte hotplug y monitorización de eventos. Implementa logging profesional.
+- `agent_bridge.py`: Gestión de sesiones TMUX, ventanas de Kitty y filtrado de salida visual.
+- `audio_transcriber.py`: Captura y transcripción local con Whisper (configurado en español).
+- `tts.py`: Motor de síntesis de voz para feedback de estado.
+- `config.json`: Configuración centralizada.
+
+## 📝 Depuración
+
+Para ver qué está pasando bajo el capó:
+```bash
+journalctl --user -u emeboteme.service -f
+```

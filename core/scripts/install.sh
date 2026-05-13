@@ -153,8 +153,6 @@ EOF
                     fi
 
                     info "Aplicando cambios a systemd..."
-                    sudo systemctl daemon-reload
-                    sudo systemctl restart getty@tty1
                     success "Auto-login configurado y getty@tty1 reiniciado."
                 ;;
             2)
@@ -178,6 +176,12 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
 
     info "Habilitando servicio..."
     chmod +x "$DOTFILES_DIR/core/scripts/focus_listener.sh"
+    
+    # Pre-descarga de modelos Whisper
+    info "Descargando modelos de IA (Whisper tiny y base)..."
+    python3 -c "from faster_whisper import WhisperModel; WhisperModel('tiny'); WhisperModel('base')" > /dev/null 2>&1 &
+    show_progress $! "Descargando modelos"
+
     mkdir -p "$HOME/.config/systemd/user"
     cp "$DOTFILES_DIR/core/services/emeboteme.service" "$HOME/.config/systemd/user/"
     systemctl --user daemon-reload

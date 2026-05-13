@@ -1,5 +1,8 @@
-pynput
+# EmeBotEme v2.0 - IA Module Dependencies
+evdev
+pyudev
 sounddevice
 numpy
 faster-whisper
 scipy
+pynput
