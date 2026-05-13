@@ -12,7 +12,7 @@ Una suite completa de **Dotfiles** para Arch Linux diseñada para la productivid
 
 *   **💻 Entorno Hyprland:** Layout dinámico, animaciones fluidas y estética moderna.
 *   **🎙️ EmeBotEme AI:** Asistente de voz integrado que ejecuta comandos, abre aplicaciones y resuelve dudas mediante IA.
-*   **🐚 Shell Moderno:** Integración con **Starship**, `eza` para listados con iconos y `bat` para lectura de archivos con resaltado.
+*   **🐚 Shell Moderno:** **Starship** prompt minimalista (`~ ❯`), `eza` para listados con iconos y `bat` para lectura de archivos con resaltado.
 *   **🚀 Instalador Inteligente:** Script `install.sh` que configura todo el entorno, desde paquetes base hasta servicios de IA.
 *   **🎨 Estética Coherente:** Waybar con control de brillo nativo, SwayNC para notificaciones y temas GTK/Kitty integrados.
 
@@ -47,8 +47,8 @@ git clone https://github.com/emerito/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # 2. Dar permisos y ejecutar el instalador
-chmod +x core/scripts/install.sh
-./core/scripts/install.sh
+chmod +x install.sh
+./install.sh
 ```
 
 El instalador te guiará a través de:
@@ -77,17 +77,20 @@ El instalador te guiará a través de:
 
 ## 📁 Estructura del Proyecto
 
-*   `.config/`: Configuraciones de Hyprland, Waybar, Kitty, etc.
-*   `EmeBotEme/`: Núcleo del asistente de voz (Python + Systemd).
+*   `config/`: Configuraciones de Hyprland, Waybar, Kitty, Rofi, Starship, etc.
+*   `modules/ai/`: Núcleo del asistente de voz EmeBotEme (Python + Systemd).
+*   `core/scripts/`: Scripts auxiliares (focus listener, instalador).
+*   `core/services/`: Servicios systemd (emeboteme.service).
 *   `install.sh`: El cerebro de la instalación.
-*   `setup-autologin.sh`: Utilidad para login sin contraseña en TTY1.
 
 ---
 
 ## ⚠️ Notas Importantes
 
 *   **Optimización:** La barra Waybar ahora usa el módulo de brillo nativo, lo que reduce el consumo de CPU al eliminar el script de monitoreo continuo.
+*   **Starship:** El prompt es minimalista (`~ ❯`). La configuración está en `config/starship/starship.toml`. El instalador crea symlinks tanto en `~/.config/starship.toml` como en `~/.config/starship/` para cubrir ambos paths de búsqueda.
 *   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB). Se recomienda usar el modelo `opencode/deepseek-v4-flash-free` si tus créditos de Hugging Face son limitados.
+*   **Dependencias IA:** El instalador incluye `pyudev` para la detección hotplug de teclados. Si el servicio `emeboteme.service` falla, verifica que todas las dependencias de `modules/ai/requirements.txt` estén instaladas.
 *   **Seguridad:** El token de Hugging Face se guarda localmente en `~/dotfiles/.env` y no debe compartirse.
 
 ---

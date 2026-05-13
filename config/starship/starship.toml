@@ -1,0 +1,12 @@
+# EmeDotEme Starship Config - Minimal: ~ ❯
+format = "$directory $character"
+
+[directory]
+style = "fg:#A394B0"
+truncation_length = 1
+truncate_to_repo = false
+
+[character]
+success_symbol = "[❯](bold #9D4EDD)"
+error_symbol = "[❯](bold #F9D342)"
+vimcmd_symbol = "[❮](bold #9D4EDD)"

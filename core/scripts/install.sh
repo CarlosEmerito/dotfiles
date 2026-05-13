@@ -121,6 +121,12 @@ case $main_choice in
             fi
         done
         
+        # Symlink directo de starship.toml para cubrir ambos paths de búsqueda de Starship
+        # ($XDG_CONFIG_HOME/starship.toml tiene prioridad sobre starship/starship.toml)
+        if [[ -f "$DOTFILES_DIR/config/starship/starship.toml" ]]; then
+            ln -sf "$DOTFILES_DIR/config/starship/starship.toml" "$HOME/.config/starship.toml"
+        fi
+        
         if [[ -f "$DOTFILES_DIR/.zshrc" ]]; then
             ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
             success "Configuración visual y shell enlazada."
@@ -168,7 +174,7 @@ esac
 
 if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     info "Configurando IA (EmeBotEme)..."
-    sudo pip install --break-system-packages pynput sounddevice numpy faster-whisper scipy evdev > /dev/null 2>&1 &
+    sudo pip install --break-system-packages pynput sounddevice numpy faster-whisper scipy evdev pyudev > /dev/null 2>&1 &
     show_progress $! "Instalando dependencias Python"
 
     DOT_ENV_FILE="$DOTFILES_DIR/.env"

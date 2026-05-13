@@ -54,3 +54,4 @@ setopt HIST_REDUCE_BLANKS
 bindkey '^H' backward-kill-word       # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word # Ctrl+Backspace (kitty/modern terminals)
 bindkey '^[[3;5~' kill-word           # Ctrl+Delete
+export PATH=~/.npm-global/bin:$PATH
