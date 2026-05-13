@@ -10,7 +10,6 @@ import pyudev
 import logging
 from audio_transcriber import AudioTranscriber
 from agent_bridge import AgentBridge
-from tts import TTSManager
 
 # --- Configuración del Subsistema de Diagnóstico ---
 # Se utiliza un formato estandarizado para facilitar el parseo por herramientas de log externas (ej. journalctl)
@@ -43,10 +42,6 @@ class EmeBotEme:
             device=self.config["whisper"]["device"],
             compute_type=self.config["whisper"]["compute_type"],
             language=self.config["whisper"].get("language")
-        )
-        self.tts = TTSManager(
-            voice=self.config["tts"]["voice"],
-            enabled=self.config["tts"]["enabled"]
         )
         
         self.is_recording = False
@@ -134,7 +129,6 @@ class EmeBotEme:
             self._set_status("RECORDING")
             subprocess.run(["notify-send", "-t", "1000", "-h", "string:x-canonical-private-synchronous:emebot", 
                           "🎙️ Escuchando...", f"Suelte para procesar"], check=False)
-            self.tts.speak("Escuchando")
             self.is_recording = True
             self.transcriber.start_recording()
         else:
@@ -148,10 +142,8 @@ class EmeBotEme:
             logger.info(f"Transcripción exitosa: '{text}'")
             
             if text:
-                self.tts.speak("Procesando")
                 self.bridge.send_command(text)
             else:
-                self.tts.speak("No te he oído")
                 subprocess.run(["notify-send", "-t", "2000", "-i", "dialog-warning", "EmeBotEme", "No se detectó voz"], check=False)
             
             self._set_status("IDLE")

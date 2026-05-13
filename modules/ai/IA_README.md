@@ -6,7 +6,6 @@ EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimi
 
 - **Persistencia con TMUX:** Mantiene el contexto de la conversación. La IA recuerda comandos anteriores gracias a una sesión persistente en segundo plano.
 - **Hotplug de Teclados:** Gracias a `pyudev`, detecta automáticamente nuevos teclados (USB/Bluetooth) sin reiniciar el servicio.
-- **Feedback de Voz (TTS):** Integración con `piper-tts` para confirmaciones audibles de estado.
 - **Transcripción de Alta Velocidad:** Optimizado con `faster-whisper` para procesar comandos casi instantáneamente.
 - **Logging Profesional:** Integrado con el sistema de logs de Python para una depuración sencilla mediante `journalctl`.
 - **Interfaz Limpia:** Filtrado de mensajes internos de herramientas y control total de la visibilidad en terminal.
@@ -14,7 +13,6 @@ EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimi
 ## 🛠️ Requisitos del Sistema
 
 - **TMUX:** Necesario para la persistencia (`sudo pacman -S tmux`).
-- **Piper TTS:** Para las notificaciones de voz (`yay -S piper-tts-bin`).
 - **Kitty:** Emulador de terminal utilizado para las ventanas flotantes.
 - **Python 3.10+**
 
@@ -30,7 +28,6 @@ Puedes personalizar el comportamiento del bot en `modules/ai/config.json`:
 - `keys`: Define las teclas de activación (por defecto `Super + Alt + Z`).
 - `whisper`: Configura el modelo de transcripción, dispositivo (CPU/GPU) e idioma fijo (ej. `"es"`).
 - `agent`: Define el comando del agente y su **System Prompt** (personalidad).
-- `tts`: Habilita/Deshabilita la voz y elige el modelo de Piper.
 
 ## ⌨️ Uso y Controles
 
@@ -45,7 +42,6 @@ Puedes personalizar el comportamiento del bot en `modules/ai/config.json`:
 - `main.py`: Orquestador principal con soporte hotplug y monitorización de eventos. Implementa logging profesional.
 - `agent_bridge.py`: Gestión de sesiones TMUX, ventanas de Kitty y filtrado de salida visual.
 - `audio_transcriber.py`: Captura y transcripción local con Whisper (configurado en español).
-- `tts.py`: Motor de síntesis de voz para feedback de estado.
 - `config.json`: Configuración centralizada.
 
 ## 📝 Depuración
