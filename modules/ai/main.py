@@ -35,7 +35,8 @@ class EmeBotEme:
         # Inyección de dependencias para los componentes core
         self.bridge = AgentBridge(
             command=self.config["agent"]["command"],
-            system_prompt=self.config["agent"]["system_prompt"]
+            system_prompt=self.config["agent"]["system_prompt"],
+            model=self.config["agent"].get("model", "opencode/deepseek-v4-flash-free")
         )
         self.transcriber = AudioTranscriber(
             model_size=self.config["whisper"]["model_size"],

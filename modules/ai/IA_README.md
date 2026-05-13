@@ -4,7 +4,8 @@ EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimi
 
 ## 🚀 Características Principales
 
-- **Persistencia con TMUX:** Mantiene el contexto de la conversación. La IA recuerda comandos anteriores gracias a una sesión persistente en segundo plano.
+- **Sesiones Aisladas (Opencode):** Mantiene el contexto de la conversación de forma nativa. La IA recuerda comandos anteriores mediante una base de datos persistente aislada, sin interferir con tus terminales de trabajo.
+- **Sin Dependencias de Terceros (No TMUX):** Arquitectura limpia que lanza ventanas de Kitty directamente, mejorando la velocidad y eliminando la necesidad de gestionar sesiones de shell ocultas.
 - **Hotplug de Teclados:** Gracias a `pyudev`, detecta automáticamente nuevos teclados (USB/Bluetooth) sin reiniciar el servicio.
 - **Transcripción de Alta Velocidad:** Optimizado con `faster-whisper` para procesar comandos casi instantáneamente.
 - **Logging Profesional:** Integrado con el sistema de logs de Python para una depuración sencilla mediante `journalctl`.
@@ -12,7 +13,7 @@ EmeBotEme es un asistente de voz local avanzado para Linux (especialmente optimi
 
 ## 🛠️ Requisitos del Sistema
 
-- **TMUX:** Necesario para la persistencia (`sudo pacman -S tmux`).
+- **Opencode:** El motor de IA CLI para la gestión de tareas y respuestas.
 - **Kitty:** Emulador de terminal utilizado para las ventanas flotantes.
 - **Python 3.10+**
 

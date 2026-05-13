@@ -12,28 +12,27 @@ Una suite completa de **Dotfiles** para Arch Linux diseñada para la productivid
 
 *   **💻 Entorno Hyprland:** Layout dinámico, animaciones fluidas y estética moderna.
 *   **🎙️ EmeBotEme AI:** Asistente de voz integrado que ejecuta comandos, abre aplicaciones y resuelve dudas mediante IA.
+*   **🐚 Shell Moderno:** Integración con **Starship**, `eza` para listados con iconos y `bat` para lectura de archivos con resaltado.
 *   **🚀 Instalador Inteligente:** Script `install.sh` que configura todo el entorno, desde paquetes base hasta servicios de IA.
-*   **🎨 Estética Coherente:** Waybar personalizada, SwayNC para notificaciones y temas GTK/Kitty integrados.
-*   **⌨️ Flujo de Trabajo Eficiente:** Atajos de teclado optimizados y modo "Push-to-Talk" para la IA.
+*   **🎨 Estética Coherente:** Waybar con control de brillo nativo, SwayNC para notificaciones y temas GTK/Kitty integrados.
 
 ---
 
 ## 🤖 EmeBotEme: Tu Asistente de Voz
 
-EmeBotEme no es solo un script; es un agente de voz desacoplado que vive en tu barra de tareas.
+EmeBotEme es un agente de voz desacoplado que vive en tu barra de tareas y se comunica con **Opencode**.
 
 *   **Push-to-Talk:** Mantén pulsado `Super + Alt + Z` para hablar. Suelta para procesar.
-*   **Persistencia (TMUX):** Mantiene la memoria de la conversación entre comandos.
+*   **Sesiones Aisladas:** Utiliza la persistencia nativa de Opencode para aislar el contexto de voz de tus terminales de trabajo.
+*   **Arquitectura Limpia:** Sin dependencias de TMUX; lanza ventanas de Kitty directamente.
 *   **Hotplug de Teclados:** Detección automática de hardware sin reiniciar.
-*   **Feedback de Voz (TTS):** Confirmaciones audibles del estado del asistente.
 
 ---
 
 ## 🛠️ Requisitos
 
 *   **Arch Linux** (Instalación limpia recomendada).
-*   **TMUX:** Necesario para la persistencia del asistente.
-*   **Piper TTS:** Para las notificaciones de voz.
+*   **Opencode:** Motor de IA CLI para las respuestas.
 *   **Hardware de Audio:** Micrófono funcional.
 *   **Internet:** Para la descarga de modelos de IA (Whisper) y paquetes.
 *   **Hugging Face Token:** Necesario para descargar los modelos de transcripción (gratuito en [huggingface.co](https://huggingface.co/settings/tokens)).
@@ -87,8 +86,8 @@ El instalador te guiará a través de:
 
 ## ⚠️ Notas Importantes
 
-*   **Hardware:** Las rutas de sensores en `waybar/config` (temperatura/brillo) están optimizadas para laptops. Si usas sobremesa, revisa la sección `custom/brightness` y `temperature`.
-*   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB). Sé paciente en el primer arranque.
+*   **Optimización:** La barra Waybar ahora usa el módulo de brillo nativo, lo que reduce el consumo de CPU al eliminar el script de monitoreo continuo.
+*   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB). Se recomienda usar el modelo `opencode/deepseek-v4-flash-free` si tus créditos de Hugging Face son limitados.
 *   **Seguridad:** El token de Hugging Face se guarda localmente en `~/dotfiles/.env` y no debe compartirse.
 
 ---

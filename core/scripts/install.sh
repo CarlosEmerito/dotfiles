@@ -50,7 +50,7 @@ print_banner() {
     echo "  ██╔══╝  ██║╚██╔╝██║██╔══╝  ██║  ██║██║   ██║   ██║   ██╔══╝  ██║╚██╔╝██║██╔══╝  "
     echo "  ███████╗██║ ╚═╝ ██║███████╗██████╔╝╚██████╔╝   ██║   ███████╗██║ ╚═╝ ██║███████╗"
     echo "  ╚══════╝╚═╝     ╚═╝╚══════╝╚═════╝  ╚═════╝    ╚═╝   ╚══════╝╚═╝     ╚═╝╚══════╝"
-    echo -e "                               Setup Script v3.0${NC}"
+    echo -e "                               EmeDotEme Setup v3.1${NC}"
     echo ""
 }
 
@@ -92,6 +92,7 @@ case $main_choice in
         info "Instalando paquetes esenciales..."
         sudo pacman -S --needed --noconfirm \
             zsh zsh-autosuggestions zsh-syntax-highlighting \
+            starship eza bat \
             hyprland hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
             waybar rofi kitty nautilus grim slurp brightnessctl playerctl \
             pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \

@@ -8,7 +8,7 @@
 
     "modules-left": ["hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["custom/emebot", "pulseaudio", "custom/brightness", "network", "temperature", "cpu", "battery", "tray"],
+    "modules-right": ["custom/emebot", "pulseaudio", "backlight", "network", "temperature", "cpu", "battery", "tray"],
 
     "custom/emebot": {
         "exec": "cat /tmp/emebot_status 2>/dev/null",
@@ -99,13 +99,13 @@
         "tooltip": true
     },
 
-    "custom/brightness": {
-        "format": "󰃞 {}%",
-        "exec": "echo $(( $(cat /sys/class/backlight/intel_backlight/brightness) * 100 / $(cat /sys/class/backlight/intel_backlight/max_brightness) )) && while read; do echo $(( $(cat /sys/class/backlight/intel_backlight/brightness) * 100 / $(cat /sys/class/backlight/intel_backlight/max_brightness) )); done < <(inotifywait -m -e modify /sys/class/backlight/intel_backlight/brightness 2>/dev/null)",
-        "return-type": "text",
-        "tooltip": true,
-        "on-scroll-up": "brightnessctl -s set 10%+",
-        "on-scroll-down": "brightnessctl -s set 10%-"
+    "backlight": {
+        "device": "intel_backlight",
+        "format": "{icon} {percent}%",
+        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "on-scroll-up": "brightnessctl set 1%+",
+        "on-scroll-down": "brightnessctl set 1%-",
+        "min-length": 6
     },
 
     "tray": {
