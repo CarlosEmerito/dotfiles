@@ -1,16 +1,23 @@
 /**
- * Catppuccin Mocha theme for Rofi
+ * EmeDotEme Custom Theme - Purple & Yellow
  */
 
+configuration {
+    modi: "drun,run";
+    show-icons: true;
+    icon-theme: "Papirus";
+}
+
 * {
-    bg-col:  #1e1e2e;
-    bg-col-light: #1e1e2e;
-    border-col: #89b4fa;
-    selected-col: #89b4fa;
-    blue: #89b4fa;
-    fg-col: #cdd6f4;
-    fg-col2: #f38ba8;
-    grey: #6c7086;
+    bg-col:  #191324;
+    bg-col-light: #2A1E38;
+    border-col: #9D4EDD;
+    selected-col: #F9D342;
+    purple: #9D4EDD;
+    yellow: #F9D342;
+    fg-col: #EBE5F0;
+    fg-col2: #F9D342;
+    grey: #A394B0;
 
     width: 600;
     font: "JetBrainsMono Nerd Font 14";
@@ -24,7 +31,7 @@ element-text, element-icon , mode-switcher {
 window {
     height: 360px;
     border: 3px;
-    border-color: @border-col;
+    border-color: @purple;
     background-color: @bg-col;
     border-radius: 12px;
 }
@@ -41,16 +48,11 @@ inputbar {
 }
 
 prompt {
-    background-color: @blue;
+    background-color: @yellow;
     padding: 6px;
     text-color: @bg-col;
     border-radius: 3px;
     margin: 20px 0px 0px 20px;
-}
-
-textbox-prompt-colon {
-    expand: false;
-    str: ":";
 }
 
 entry {
@@ -87,7 +89,7 @@ element selected {
 
 mode-switcher {
     spacing: 0;
-  }
+}
 
 button {
     padding: 10px;
@@ -99,7 +101,7 @@ button {
 
 button selected {
   background-color: @bg-col;
-  text-color: @blue;
+  text-color: @yellow;
 }
 
 message {
@@ -112,6 +114,6 @@ message {
 textbox {
     padding: 6px;
     margin: 20px 0px 0px 20px;
-    text-color: @blue;
+    text-color: @yellow;
     background-color: @bg-col-light;
 }
