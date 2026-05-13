@@ -1,106 +1,100 @@
-# Dotfiles - Arch Linux + Hyprland
+# 🌌 EmeDotEme - Hyprland + AI Assistant Suite
 
-Configuración personalizada para Arch Linux con Hyprland y entorno gráfico moderno.
+[![Arch Linux](https://img.shields.io/badge/OS-Arch%20Linux-blue?logo=arch-linux&logoColor=white)](https://archlinux.org/)
+[![Hyprland](https://img.shields.io/badge/Compositor-Hyprland-brightgreen)](https://hyprland.org/)
+[![AI Assistant](https://img.shields.io/badge/AI-EmeBotEme-purple)](https://github.com/emerito/dotfiles)
 
-## Componentes
+Una suite completa de **Dotfiles** para Arch Linux diseñada para la productividad, la estética y la integración de Inteligencia Artificial mediante voz.
 
-| Componente | Descripción |
-|------------|-------------|
-| **Hyprland** | Compositor Wayland (dynamic tiling) |
-| **Waybar** | Barra de estado personalizable |
-| **Rofi** | Launcher de aplicaciones |
-| **Kitty** | Emulador de terminal GPU-acelerado |
-| **SwayNC** | Centro de notificaciones |
-| **Nautilus** | Gestor de archivos |
-| **Google Chrome** | Navegador web |
-| **nwg-displays** | Configurador de monitores para Wayland |
+---
 
-## Requisitos previos
+## ✨ Características Principales
 
-- Arch Linux base instalado
-- Usuario con privilegios sudo
-- Conexión a internet
+*   **💻 Entorno Hyprland:** Layout dinámico, animaciones fluidas y estética moderna.
+*   **🎙️ EmeBotEme AI:** Asistente de voz integrado que ejecuta comandos, abre aplicaciones y resuelve dudas mediante IA.
+*   **🚀 Instalador Inteligente:** Script `install.sh` que configura todo el entorno, desde paquetes base hasta servicios de IA.
+*   **🎨 Estética Coherente:** Waybar personalizada, SwayNC para notificaciones y temas GTK/Kitty integrados.
+*   **⌨️ Flujo de Trabajo Eficiente:** Atajos de teclado optimizados y modo "Push-to-Talk" para la IA.
 
-## Instalación
+---
 
-1. Clonar el repositorio:
+## 🤖 EmeBotEme: Tu Asistente de Voz
+
+EmeBotEme no es solo un script; es un agente de voz desacoplado que vive en tu barra de tareas.
+
+*   **Push-to-Talk:** Mantén pulsado `Alt + Z` para hablar. Suelta para procesar.
+*   **Ejecución Inteligente:** "Abre Chrome", "Busca información sobre...", "Configura mi monitor". Los comandos se ejecutan de forma independiente a la ventana del asistente.
+*   **Feedback Visual:** Animaciones en Waybar y notificaciones OSD (On-Screen Display) en tiempo real.
+*   **Privacidad:** Usa modelos locales o ligeros mediante la suite `opencode`.
+
+---
+
+## 🛠️ Requisitos
+
+*   **Arch Linux** (Instalación limpia recomendada).
+*   **Hardware de Audio:** Micrófono funcional.
+*   **Internet:** Para la descarga de modelos de IA (Whisper) y paquetes.
+*   **Hugging Face Token:** Necesario para descargar los modelos de transcripción (gratuito en [huggingface.co](https://huggingface.co/settings/tokens)).
+
+---
+
+## 🚀 Instalación Rápida
+
 ```bash
-git clone https://github.com/TU_USUARIO/dotfiles.git ~/dotfiles
+# 1. Clonar el repositorio
+git clone https://github.com/emerito/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-```
 
-2. Ejecutar el script de instalación:
-```bash
+# 2. Dar permisos y ejecutar el instalador
 chmod +x install.sh
 ./install.sh
 ```
 
-**Nota:** Durante la instalación se te preguntará cómo quieres iniciar Hyprland:
-- **Opción 1 (SDDM):** Display manager gráfico con login tradicional
-- **Opción 2 (Auto-login):** Entra directo sin contraseña (configura `setup-autologin.sh`)
-- **Opción 3:** Inicio manual ejecutando `Hyprland` desde TTY
+El instalador te guiará a través de:
+1.  Instalación de paquetes oficiales y AUR (`yay`).
+2.  Configuración de enlaces simbólicos para `.config`.
+3.  Elección del gestor de inicio (SDDM, Auto-login o Manual).
+4.  Configuración de **EmeBotEme** (te pedirá tu token de Hugging Face).
 
-3. Reiniciar el sistema:
-```bash
-reboot
-```
+---
 
-## Paquetes que se instalan
+## ⌨️ Atajos de Teclado (Keybinds)
 
-### Oficiales (pacman)
-- hyprland, hyprcursor, hyprlang, hyprutils, hyprgraphics, hyprwayland-scanner
-- waybar, rofi, kitty
-- nautilus, grim, slurp
-- brightnessctl, playerctl
-- pipewire, pipewire-pulse, pipewire-alsa, pipewire-jack, wireplumber
-- papirus-icon-theme, ttf-jetbrains-mono-nerd, ttf-font-awesome
-- inotify-tools, power-profiles-daemon
-- networkmanager, bluez, bluez-utils
-- xdg-desktop-portal-hyprland, polkit-gnome, dunst
+| Tecla | Acción |
+| :--- | :--- |
+| `Alt + Z` (Mantener) | **Hablar con EmeBotEme** |
+| `Super + Q` / `Enter` | Abrir Terminal (Kitty) |
+| `Super + Space` | Lanzador de Apps (Rofi) |
+| `Super + E` | Explorador de Archivos (Nautilus) |
+| `Super + F` | Navegador (Google Chrome) |
+| `Super + N` | Centro de Notificaciones |
+| `Super + C` | Cerrar Ventana |
+| `Print` | Captura de Pantalla |
+| `Super + Shift + S` | Captura de Área (Portapapeles) |
 
-### AUR (yay)
-- google-chrome
-- swaync
-- libnotify
-- nwg-displays
+---
 
-## Atajos de teclado principales
+## 📁 Estructura del Proyecto
 
-| Atajo | Acción |
-|-------|--------|
-| `Super + Q` / `Super + Return` | Abrir terminal (Kitty) |
-| `Super + E` | Abrir gestor de archivos (Nautilus) |
-| `Super + Space` | Abrir launcher (Rofi) |
-| `Super + F` | Abrir Google Chrome |
-| `Super + N` | Notificaciones (SwayNC) |
-| `Super + C` / `Alt + F4` | Cerrar ventana activa |
-| `Super + M` | Salir de Hyprland |
-| `Print` | Captura de pantalla completa |
-| `Super + Shift + S` | Capturar área al portapapeles |
-| `Super + Print` | Capturar área y guardar |
+*   `.config/`: Configuraciones de Hyprland, Waybar, Kitty, etc.
+*   `EmeBotEme/`: Núcleo del asistente de voz (Python + Systemd).
+*   `install.sh`: El cerebro de la instalación.
+*   `setup-autologin.sh`: Utilidad para login sin contraseña en TTY1.
 
-## Estructura del repositorio
+---
 
-```
-dotfiles/
-├── .config/
-│   ├── hypr/           # Configuración de Hyprland
-│   ├── waybar/         # Configuración de Waybar
-│   ├── rofi/           # Configuración de Rofi
-│   ├── swaync/         # Configuración de SwayNC
-│   ├── kitty/          # Configuración de Kitty
-│   ├── nwg-displays/   # Configuración de nwg-displays
-│   ├── gtk-3.0/        # Temas GTK3
-│   ├── gtk-4.0/        # Temas GTK4
-│   └── pulse/          # Configuración de PulseAudio
-├── install.sh          # Script de instalación
-└── README.md
-```
+## ⚠️ Notas Importantes
 
-## Notas
+*   **Hardware:** Las rutas de sensores en `waybar/config` (temperatura/brillo) están optimizadas para laptops. Si usas sobremesa, revisa la sección `custom/brightness` y `temperature`.
+*   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB). Sé paciente en el primer arranque.
+*   **Seguridad:** El token de Hugging Face se guarda localmente en `~/dotfiles/.env` y no debe compartirse.
 
-- El layout de teclado está configurado en español (`es`)
-- Se configura automáticamente el soporte para Wayland en apps Qt, GTK, SDL y Electron
-- Se ofrecen 3 opciones para iniciar Hyprland: SDDM, Auto-login o manual
-- El script `setup-autologin.sh` configura auto-login sin contraseña (solo usar si confías en la seguridad física de tu PC)
-- **Importante:** Las rutas en `waybar/config` para sensores de temperatura (`/sys/class/hwmon/hwmon1`) y brillo (`/sys/class/backlight/intel_backlight`) pueden variar según el hardware. Ajustar si es necesario.
+---
+
+## 🤝 Contribuciones
+
+Si tienes ideas para mejorar la integración de la IA o los dotfiles, ¡los Pull Requests son bienvenidos!
+
+---
+
+**Desarrollado con ❤️ por Emerito.**

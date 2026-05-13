@@ -1,0 +1,15 @@
+[Unit]
+Description=EmeBotEme Voice AI Assistant
+After=network.target sound.target
+
+[Service]
+Type=simple
+# El servicio debe cargar el token de Hugging Face
+EnvironmentFile=%h/dotfiles/.env
+Environment="PATH=%h/.opencode/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/python -u %h/dotfiles/modules/ai/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

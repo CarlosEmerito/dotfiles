@@ -38,6 +38,32 @@ window#waybar.hidden {
     background: rgba(243, 139, 168, 0.15);
 }
 
+#custom-emebot {
+    background: rgba(187, 154, 247, 0.1);
+    color: #bb9af7;
+    border-radius: 8px;
+    margin: 4px;
+    padding: 0 10px;
+}
+
+#custom-emebot.RECORDING {
+    background: rgba(243, 139, 168, 0.2);
+    color: #f38ba8;
+    animation: blink 0.5s linear infinite alternate;
+}
+
+#custom-emebot.PROCESSING {
+    background: rgba(249, 226, 175, 0.2);
+    color: #f9e2af;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
 #clock,
 #battery,
 #cpu,
