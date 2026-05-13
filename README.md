@@ -2,7 +2,7 @@
 
 [![Arch Linux](https://img.shields.io/badge/OS-Arch%20Linux-blue?logo=arch-linux&logoColor=white)](https://archlinux.org/)
 [![Hyprland](https://img.shields.io/badge/Compositor-Hyprland-brightgreen)](https://hyprland.org/)
-[![AI Assistant](https://img.shields.io/badge/AI-EmeBotEme-purple)](https://github.com/emerito/dotfiles)
+[![AI Assistant](https://img.shields.io/badge/AI-EmeBotEme-purple)](https://emedoteme.es)
 
 Una suite completa de **Dotfiles** para Arch Linux diseñada para la productividad, la estética y la integración de Inteligencia Artificial mediante voz.
 
