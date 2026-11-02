@@ -93,7 +93,8 @@ El instalador te guiará a través de:
 
 ## ⚠️ Notas Importantes
 
-*   **GPU Intel:** Las variables de entorno están configuradas para GPU Intel (`LIBVA_DRIVER_NAME=iHD`, `MESA_LOADER_DRIVER_NAME=iris`). Si usas NVIDIA, ajusta `config/hypr/envvariables.conf`.
+*   **GPU Intel:** Las variables de entorno están configuradas para GPU Intel (`LIBVA_DRIVER_NAME=iHD`, `MESA_LOADER_DRIVER_NAME=iris`). Si usas NVIDIA, ajusta `config/hypr/envvariables.lua`.
+*   **Hyprland:** la configuración usa Lua (`config/hypr/*.lua`) desde Hyprland 0.57. Los antiguos `.conf` están en `config/hypr/legacy/` solo como referencia y ya no se cargan.
 *   **Modo Visión:** Requiere `grim` y `slurp` para captura de pantalla. La imagen se pasa al agente Opencode para su análisis.
 *   **Entrada de Texto:** Usa `prompt_toolkit` con atajos: `Ctrl+H` borra palabra completa, `Escape` cierra sin guardar.
 *   **Starship:** El prompt es minimalista (`~ ❯`). La configuración está en `config/starship/starship.toml`. El instalador crea symlinks tanto en `~/.config/starship.toml` como en `~/.config/starship/` para cubrir ambos paths de búsqueda.
