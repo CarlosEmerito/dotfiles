@@ -13,7 +13,7 @@ handle() {
         address=$(hyprctl clients -j | jq -r '.[] | select(.class == "emebot_popup") | .address')
         if [[ -n "$address" ]]; then
           # En lugar de cerrar, movemos al espacio especial (scratchpad)
-          hyprctl dispatch movetoworkspacesilent special:emebot,address:$address
+          hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:emebot\", window = \"address:$address\", follow = false })"
         fi
       fi
       ;;
