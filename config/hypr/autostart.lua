@@ -7,9 +7,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("command -v waybar >/dev/null 2>&1 && ! pgrep -x waybar >/dev/null 2>&1 && waybar")
     hl.exec_cmd("command -v swaync >/dev/null 2>&1 && ! pgrep -x swaync >/dev/null 2>&1 && swaync")
 
-    -- Actualizar entorno para servicios systemd --user y reiniciar EmeBotEme
-    hl.exec_cmd("command -v dbus-update-activation-environment >/dev/null 2>&1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE DISPLAY HYPRLAND_INSTANCE_SIGNATURE")
-    hl.exec_cmd("systemctl --user cat emeboteme.service >/dev/null 2>&1 && systemctl --user restart emeboteme.service")
+    -- Actualizar entorno para servicios systemd --user y reiniciar EmeBotEme.
+    -- Va en una sola orden para garantizar que el restart ocurre después.
+    hl.exec_cmd("command -v dbus-update-activation-environment >/dev/null 2>&1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE DISPLAY HYPRLAND_INSTANCE_SIGNATURE; systemctl --user cat emeboteme.service >/dev/null 2>&1 && systemctl --user restart emeboteme.service")
 
     -- Iniciar sesión gráfica y portal para diálogos de archivos (Chrome/Firefox)
     hl.exec_cmd("systemctl --user start graphical-session.target")
