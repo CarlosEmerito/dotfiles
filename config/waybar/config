@@ -117,7 +117,6 @@
         "disable-scroll": false,
         "all-outputs": true,
         "sort-by-number": true,
-        "on-click": "hyprctl dispatch 'hl.dsp.focus({workspace=\"{name}\"})'",
         "format": "{icon} {windows}",
         "format-window-separator": " ",
         "window-rewrite-default": " ",
