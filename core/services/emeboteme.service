@@ -4,8 +4,8 @@ After=network.target sound.target
 
 [Service]
 Type=simple
-# El servicio debe cargar el token de Hugging Face
-EnvironmentFile=%h/.config/emeboteme/.env
+# El token de Hugging Face es opcional: sin él la IA funciona en modo local/básico.
+EnvironmentFile=-%h/.config/emeboteme/.env
 Environment="PATH=%h/.opencode/bin:/usr/local/bin:/usr/bin:/bin"
 ExecStart=/usr/bin/python -u %h/.config/emeboteme/ai/main.py
 Restart=always

@@ -4,6 +4,7 @@
 
 require("envvariables")
 require("monitors")
+require("workspaces")
 require("keybinds")
 require("autostart")
 

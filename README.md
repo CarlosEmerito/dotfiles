@@ -46,7 +46,7 @@ EmeBotEme es un agente multimodal (voz/texto/visión) que vive en tu barra de ta
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/emerito/dotfiles.git ~/dotfiles
+git clone https://github.com/CarlosEmerito/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # 2. Dar permisos y ejecutar el instalador
@@ -93,14 +93,15 @@ El instalador te guiará a través de:
 
 ## ⚠️ Notas Importantes
 
-*   **GPU Intel:** Las variables de entorno están configuradas para GPU Intel (`LIBVA_DRIVER_NAME=iHD`, `MESA_LOADER_DRIVER_NAME=iris`). Si usas NVIDIA, ajusta `config/hypr/envvariables.lua`.
-*   **Hyprland:** la configuración usa Lua (`config/hypr/*.lua`) desde Hyprland 0.57. Los antiguos `.conf` están en `config/hypr/legacy/` solo como referencia y ya no se cargan.
+*   **GPU:** El repo trae activadas las variables de NVIDIA (`LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `NVD_BACKEND=direct`). El instalador pregunta por tu GPU y descomenta solo el bloque correspondiente (Intel, NVIDIA o AMD) en `config/hypr/envvariables.lua`. Después de cambiar de GPU, reinicia la sesión para que las apps nuevas hereden las variables.
+*   **Hyprland:** la configuración usa Lua (`config/hypr/*.lua`) desde Hyprland 0.55+ (probado con 0.57). Los antiguos `.conf` están en `config/hypr/legacy/` solo como referencia y **ya no se cargan**.
+*   **nwg-displays:** guarda `monitors.lua` y `workspaces.lua` (además de los `.conf` de compatibilidad). Hyprland carga los `.lua`; editar los `.conf` no aplica cambios. `workspaces.lua` se carga con `require("workspaces")`.
 *   **Modo Visión:** Requiere `grim` y `slurp` para captura de pantalla. La imagen se pasa al agente Opencode para su análisis.
 *   **Entrada de Texto:** Usa `prompt_toolkit` con atajos: `Ctrl+H` borra palabra completa, `Escape` cierra sin guardar.
 *   **Starship:** El prompt es minimalista (`~ ❯`). La configuración está en `config/starship/starship.toml`. El instalador crea symlinks tanto en `~/.config/starship.toml` como en `~/.config/starship/` para cubrir ambos paths de búsqueda.
 *   **IA:** La primera vez que uses la voz, EmeBotEme descargará el modelo de Whisper (~75MB).
 *   **Dependencias IA:** El instalador incluye `pyudev` para la detección hotplug de teclados. Si el servicio `emeboteme.service` falla, verifica que todas las dependencias de `modules/ai/requirements.txt` estén instaladas (`pip install -r modules/ai/requirements.txt`).
-*   **Seguridad:** El token de Hugging Face se guarda localmente en `~/dotfiles/.env` y no debe compartirse.
+*   **Seguridad:** El token de Hugging Face se guarda en `~/.config/emeboteme/.env` con permisos `600` y no debe compartirse. `~/.config/pulse` es estado local y no se enlaza al repo.
 
 ---
 

@@ -116,14 +116,14 @@ case $main_choice in
         sudo pacman -S --needed --noconfirm \
             zsh zsh-autosuggestions zsh-syntax-highlighting \
             starship eza bat \
-            cliphist swappy swaybg \
+            cliphist wl-clipboard swappy swaybg \
             hyprland hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
             waybar rofi kitty nautilus grim slurp brightnessctl playerctl \
             pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
             papirus-icon-theme ttf-jetbrains-mono-nerd inotify-tools \
             socat jq python \
             power-profiles-daemon networkmanager network-manager-applet bluez bluez-utils blueman \
-            xdg-desktop-portal-hyprland polkit-gnome fastfetch > /dev/null 2>&1 &
+            xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome fastfetch > /dev/null 2>&1 &
         show_progress $! "Instalando desde Pacman" || warn "Algunos paquetes Pacman fallaron"
 
         # ------------------------------------------------------------------
@@ -146,20 +146,51 @@ case $main_choice in
         # ------------------------------------------------------------------
         # Selección de GPU
         # ------------------------------------------------------------------
+        set_gpu_env() {
+            local gpu="$1"
+            local file="$DOTFILES_DIR/config/hypr/envvariables.lua"
+            local name
+
+            # Comenta cualquier variable de GPU que estuviera activa.
+            for name in LIBVA_DRIVER_NAME MESA_LOADER_DRIVER_NAME __GLX_VENDOR_LIBRARY_NAME NVD_BACKEND; do
+                sed -i -E "s|^([[:space:]]*)hl\.env\(\"$name\"|\1-- hl.env(\"$name\"|" "$file"
+            done
+
+            # Descomenta únicamente el bloque de la GPU elegida.
+            case "$gpu" in
+                intel)
+                    sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "iHD"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("MESA_LOADER_DRIVER_NAME", "iris"\))|\1\2|' "$file"
+                    ;;
+                nvidia)
+                    sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "nvidia"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("__GLX_VENDOR_LIBRARY_NAME", "nvidia"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("NVD_BACKEND", "direct"\))|\1\2|' "$file"
+                    ;;
+                amd)
+                    sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "radeonsi"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("MESA_LOADER_DRIVER_NAME", "radeonsi"\))|\1\2|' "$file"
+                    ;;
+            esac
+        }
+
         echo ""
         echo -e "${CYAN}${BOLD}¿Qué GPU tienes?${NC}"
-        echo -e "1) ${BOLD}Intel${NC} (default)"
+        echo -e "1) ${BOLD}Intel${NC}"
         echo -e "2) ${BOLD}NVIDIA${NC}"
         echo -e "3) ${BOLD}AMD${NC}"
         read -p "Selecciona una opción [1-3]: " gpu_choice
         case $gpu_choice in
+            1)
+                info "Configurando envvariables para Intel..."
+                set_gpu_env intel
+                ;;
             2)
                 info "Configurando envvariables para NVIDIA..."
-                sed -i '/^# NVIDIA$/,/^$/{s/^-- hl\.env/hl.env/}' "$DOTFILES_DIR/config/hypr/envvariables.lua"
+                set_gpu_env nvidia
                 ;;
             3)
                 info "Configurando envvariables para AMD..."
-                sed -i '/^# AMD$/,/^$/{s/^-- hl\.env/hl.env/}' "$DOTFILES_DIR/config/hypr/envvariables.lua"
+                set_gpu_env amd
+                ;;
+            *)
+                warn "Opción inválida; se deja la configuración de GPU actual."
                 ;;
         esac
 
@@ -169,35 +200,62 @@ case $main_choice in
         info "Configurando enlaces simbólicos..."
         mkdir -p ~/.config
 
-        # Limpiar symlinks rotos de configuraciones que ya no existan en el repo
+        # Limpiar symlinks rotos de configuraciones que ya no existan en el repo.
+        # pulse se trata aparte porque puede ser un symlink roto tras actualizar
+        # el repo (el cookie ya no vive en git).
         for existing in "$HOME/.config/"*; do
-            if [[ -L "$existing" ]] && [[ ! -e "$existing" ]]; then
+            if [[ -L "$existing" ]] && [[ ! -e "$existing" ]] && [[ "$(basename "$existing")" != "pulse" ]]; then
                 rm -f "$existing"
                 info "Limpiando symlink roto: $(basename "$existing")"
             fi
         done
 
-        for dir in "$DOTFILES_DIR/config/"*; do
-            if [[ -d "$dir" ]] && [[ ! -L "$dir" ]]; then
-                dir_name=$(basename "$dir")
-                target="$HOME/.config/$dir_name"
-                if [[ -d "$target" ]] && [[ ! -L "$target" ]]; then
-                    warn "Config local detectada: $target"
-                    read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " backup_choice
-                    case "${backup_choice:-S}" in
-                        [sS])
-                            cp -r "$target" "${target}.bak"
-                            success "Backup creado: ${target}.bak"
-                            ;;
-                    esac
-                    rm -rf "$target"
-                elif [[ -L "$target" ]]; then
-                    rm -f "$target"
-                fi
-                ln -sf "$dir" "$target"
-                success ".config/$dir_name enlazado."
+        # ~/.config/pulse es estado local de PulseAudio: nunca debe apuntar al repo.
+        # Si venía enlazado de una instalación anterior, se migra conservando el cookie
+        # (o se crea un directorio local vacío si el symlink ya estaba roto).
+        if [[ -L "$HOME/.config/pulse" ]] && [[ "$(readlink "$HOME/.config/pulse")" == "$DOTFILES_DIR/config/pulse" ]]; then
+            info "Migrando ~/.config/pulse a un directorio local..."
+            pulse_tmp=$(mktemp -d)
+            if [[ -d "$HOME/.config/pulse/" ]]; then
+                cp -a "$HOME/.config/pulse/." "$pulse_tmp/" 2>/dev/null || true
             fi
+            rm -f "$HOME/.config/pulse"
+            mv "$pulse_tmp" "$HOME/.config/pulse"
+            chmod 700 "$HOME/.config/pulse"
+            chmod 600 "$HOME/.config/pulse/cookie" 2>/dev/null || true
+        fi
+
+        # Solo se enlazan configuraciones que el repo gestiona de verdad.
+        # gtk-2.0/gtk-3.0 y pulse se dejan como estado local para no pisar
+        # configuraciones de apps ni credenciales del servidor de audio.
+        MANAGED_CONFIGS=(hypr kitty nwg-displays rofi starship swaync swappy waybar)
+        for dir_name in "${MANAGED_CONFIGS[@]}"; do
+            dir="$DOTFILES_DIR/config/$dir_name"
+            [[ -d "$dir" ]] || continue
+            target="$HOME/.config/$dir_name"
+            if [[ -d "$target" ]] && [[ ! -L "$target" ]]; then
+                warn "Config local detectada: $target"
+                read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " backup_choice
+                case "${backup_choice:-S}" in
+                    [nN])
+                        warn "Se conserva $target; no se enlaza $dir_name."
+                        continue
+                        ;;
+                    *)
+                        cp -r "$target" "${target}.bak"
+                        success "Backup creado: ${target}.bak"
+                        ;;
+                esac
+                rm -rf "$target"
+            elif [[ -L "$target" ]]; then
+                rm -f "$target"
+            fi
+            ln -sfn "$dir" "$target"
+            success ".config/$dir_name enlazado."
         done
+
+        # Carpetas usadas por los atajos de captura de pantalla
+        mkdir -p "$HOME/Imágenes"
 
         # Symlink directo de starship.toml (prioridad sobre starship/starship.toml)
         if [[ -f "$DOTFILES_DIR/config/starship/starship.toml" ]]; then
@@ -213,23 +271,30 @@ case $main_choice in
         fi
 
         # Backup .zshrc local antes de reemplazar
+        link_zshrc=1
         if [[ -f "$HOME/.zshrc" ]] && [[ ! -L "$HOME/.zshrc" ]]; then
             warn "Config local detectada: ~/.zshrc"
             read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " zsh_backup
             case "${zsh_backup:-S}" in
-                [sS])
+                [nN])
+                    warn "Se conserva ~/.zshrc; no se enlaza el del repo."
+                    link_zshrc=0
+                    ;;
+                *)
                     cp "$HOME/.zshrc" "$HOME/.zshrc.bak"
                     success "Backup creado: ~/.zshrc.bak"
+                    rm -f "$HOME/.zshrc"
                     ;;
             esac
-            rm -f "$HOME/.zshrc"
         fi
 
-        if [[ -f "$DOTFILES_DIR/.zshrc" ]]; then
-            ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
-            success "Configuración visual y shell enlazada."
-        else
-            warn "No se encontró .zshrc en $DOTFILES_DIR"
+        if [[ $link_zshrc -eq 1 ]]; then
+            if [[ -f "$DOTFILES_DIR/.zshrc" ]]; then
+                ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
+                success "Configuración visual y shell enlazada."
+            else
+                warn "No se encontró .zshrc en $DOTFILES_DIR"
+            fi
         fi
 
         # Agregar usuario a grupos necesarios (evita duplicados)
@@ -314,7 +379,7 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     # Reemplazar placeholder con ruta real de Opencode
     sed -i "s|__OPCODE_PATH__|$HOME/.opencode/bin/opencode|" "$AI_INSTALL_DIR/ai/config.json"
 
-    # Copiar focus_listener.sh al directorio de IA para que autostart.conf lo encuentre
+    # Copiar focus_listener.sh al directorio de IA para que autostart.lua lo lance
     cp "$DOTFILES_DIR/core/scripts/focus_listener.sh" "$AI_INSTALL_DIR/focus_listener.sh"
     chmod +x "$AI_INSTALL_DIR/focus_listener.sh"
 
@@ -365,6 +430,9 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
         fi
     fi
 
+    # El token es un secreto: solo el usuario debe poder leerlo.
+    [[ -f "$DOT_ENV_FILE" ]] && chmod 600 "$DOT_ENV_FILE"
+
     # Servicio systemd --user
     mkdir -p "$HOME/.config/systemd/user"
     cp "$DOTFILES_DIR/core/services/emeboteme.service" "$HOME/.config/systemd/user/"
@@ -384,6 +452,13 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
 
     success "IA configurada."
 fi
+
+# ------------------------------------------------------------------
+# Comprobación de binarios usados por autostart.lua
+# ------------------------------------------------------------------
+for cmd in swaybg nm-applet blueman-applet hyprshutdown; do
+    command -v "$cmd" >/dev/null 2>&1 || warn "Falta '$cmd'; autostart.lua lo omitirá. Instálalo si quieres esa función."
+done
 
 echo ""
 info "¡Instalación completada!"
