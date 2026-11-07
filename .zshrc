@@ -7,11 +7,17 @@ export ZSH="$HOME/.oh-my-zsh"
 # Plugins
 plugins=(git sudo)
 
-# Source Oh My Zsh
-source $ZSH/oh-my-zsh.sh
+# Source Oh My Zsh only if it was installed correctly.
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+    source "$ZSH/oh-my-zsh.sh"
+else
+    echo "Aviso: Oh My Zsh no está instalado en $ZSH" >&2
+fi
 
 # Starship Prompt
-eval "$(starship init zsh)"
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init zsh)"
+fi
 
 # --- Modern Aliases ---
 alias ls='eza --icons=always'
@@ -24,18 +30,18 @@ alias cat='bat --style=plain'
 [[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # --- PATH ---
-export PATH=$HOME/.opencode/bin:$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
-export PATH="$HOME/.npm-global/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$HOME/bin:$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.kimi-code/bin:/usr/local/bin:$PATH"
 
 # --- Environment Variables ---
 export EDITOR='nano'
-# El HF_TOKEN se gestiona via ~/dotfiles/.env
-[[ -f ~/dotfiles/.env ]] && source ~/dotfiles/.env
-
-
+# El HF_TOKEN se gestiona via ~/.config/emeboteme/.env
+if [[ -f "$HOME/.config/emeboteme/.env" ]]; then
+    source "$HOME/.config/emeboteme/.env"
+    export HF_TOKEN
+fi
 
 # --- Modern CLI Tools ---
-if command -v fastfetch &> /dev/null; then
+if command -v fastfetch >/dev/null 2>&1; then
     fastfetch
 fi
 
@@ -51,7 +57,12 @@ setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_REDUCE_BLANKS
 
 # Key bindings
-bindkey '^H' backward-kill-word       # Ctrl+Backspace
-bindkey '^[[127;5u' backward-kill-word # Ctrl+Backspace (kitty/modern terminals)
-bindkey '^[[3;5~' kill-word           # Ctrl+Delete
-export PATH=~/.npm-global/bin:$PATH
+bindkey '^H' backward-kill-word          # Ctrl+Backspace
+bindkey '^[[127;5u' backward-kill-word   # Ctrl+Backspace (kitty/modern terminals)
+bindkey '^[[3;5~' kill-word              # Ctrl+Delete
+
+# Vercel MCP (vercel-mcp-pro)
+# Desactivado para configurar la cuenta personal (carlos09102007@gmail.com).
+# El MCP de Vercel ahora usa OAuth (https://mcp.vercel.com); este token era de la cuenta GoTogether.
+# Reactivar solo si se vuelve a usar la cuenta GoTogether.
+# export VERCEL_TOKEN="..."

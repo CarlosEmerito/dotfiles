@@ -34,7 +34,7 @@ Puedes personalizar el comportamiento del bot en `modules/ai/config.json`:
   - `clear_session_trigger` (`C`): Reinicia el contexto de la sesión.
   - `screenshot_trigger` (`S`): Modo Visión (captura + consulta).
 - `whisper`: Configura el modelo de transcripción, dispositivo (CPU/GPU) e idioma fijo (ej. `"es"`).
-- `agent`: Define el comando del agente y su **System Prompt** (personalidad).
+- `agent`: Define el comando del agente, su **System Prompt** (personalidad) y los modelos: `model` (voz/texto) y `vision_model` (imágenes; debe aceptar entrada de imagen, ej. `opencode/mimo-v2.5-free`).
 
 ## ⌨️ Uso y Controles
 

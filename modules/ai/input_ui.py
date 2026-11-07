@@ -17,7 +17,7 @@ def main():
     NC = "\033[0m"
 
     print(f"{PURPLE}󰚩 EmeBotEme{NC}")
-    
+
     kb = KeyBindings()
 
     # Importamos los comandos estándar
@@ -29,7 +29,7 @@ def main():
     kb.add('escape', 'backspace')(backward_kill_word)
 
     # Forzamos que la tecla física Backspace solo borre un carácter
-    # Esto evita que, en terminales que confunden c-h con backspace, 
+    # Esto evita que, en terminales que confunden c-h con backspace,
     # el retroceso normal borre palabras enteras.
     kb.add('backspace')(backward_delete_char)
 
@@ -41,7 +41,7 @@ def main():
     try:
         # Usamos prompt_toolkit con los bindings
         text = prompt("> ", key_bindings=kb)
-        
+
         if text and text.strip():
             with open("/tmp/emebot_input.txt", "w") as f:
                 f.write(text.strip())

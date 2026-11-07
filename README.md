@@ -34,8 +34,9 @@ EmeBotEme es un agente multimodal (voz/texto/visión) que vive en tu barra de ta
 
 ## 🛠️ Requisitos
 
-*   **Arch Linux** (Instalación limpia recomendada).
-*   **Opencode:** Motor de IA CLI para las respuestas.
+*   **Arch Linux** (funciona tanto en instalación limpia como sobre una ya existente; el instalador crea backups con fecha antes de reemplazar configuraciones locales).
+*   **Opencode:** Motor de IA CLI para las respuestas. El instalador ofrece instalarlo si no lo encuentra.
+*   **Waybar >= 0.16:** Necesario para que los clicks en los workspaces funcionen con Hyprland 0.57 en modo Lua. El instalador avisa y ofrece instalar la versión de `extra-testing` si solo hay 0.15.
 *   **Hardware de Audio:** Micrófono funcional.
 *   **Internet:** Para la descarga de modelos de IA (Whisper) y paquetes.
 *   **Hugging Face Token:** Necesario para descargar los modelos de transcripción (gratuito en [huggingface.co](https://huggingface.co/settings/tokens)).
@@ -85,7 +86,7 @@ El instalador te guiará a través de:
 
 *   `config/`: Configuraciones de Hyprland, Waybar, Kitty, Rofi, Starship, etc.
 *   `modules/ai/`: Núcleo del asistente EmeBotEme (Python + Systemd). Incluye `input_ui.py` (entrada de texto con `prompt_toolkit`).
-*   `core/scripts/`: Scripts auxiliares (focus listener, instalador).
+*   `core/scripts/`: Scripts auxiliares (focus listener, capturas, etc.).
 *   `core/services/`: Servicios systemd (emeboteme.service).
 *   `install.sh`: El cerebro de la instalación.
 
@@ -93,6 +94,7 @@ El instalador te guiará a través de:
 
 ## ⚠️ Notas Importantes
 
+*   **Instalador y backups:** si ya existe `~/.config/hypr`, `~/.config/waybar`, `~/.zshrc`, etc., el instalador pregunta antes de reemplazar y crea copias `.bak.AAAA-MM-DD-HHMMSS`. Responder `n` conserva la configuración local. No borra directorios sin confirmación.
 *   **GPU:** El repo trae activadas las variables de NVIDIA (`LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `NVD_BACKEND=direct`). El instalador pregunta por tu GPU y descomenta solo el bloque correspondiente (Intel, NVIDIA o AMD) en `config/hypr/envvariables.lua`. Después de cambiar de GPU, reinicia la sesión para que las apps nuevas hereden las variables.
 *   **Hyprland:** la configuración usa Lua (`config/hypr/*.lua`) desde Hyprland 0.55+ (probado con 0.57). Los antiguos `.conf` están en `config/hypr/legacy/` solo como referencia y **ya no se cargan**.
 *   **nwg-displays:** guarda `monitors.lua` y `workspaces.lua` (además de los `.conf` de compatibilidad). Hyprland carga los `.lua`; editar los `.conf` no aplica cambios. `workspaces.lua` se carga con `require("workspaces")`.

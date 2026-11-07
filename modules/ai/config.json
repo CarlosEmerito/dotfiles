@@ -15,8 +15,9 @@
     },
     "agent": {
         "name": "EmeBotEme",
-        "command": "/home/emerito/.opencode/bin/opencode",
+        "command": "__OPCODE_PATH__",
         "model": "opencode/big-pickle",
+        "vision_model": "opencode/mimo-v2.5-free",
         "system_prompt": "Eres EmeBotEme, un asistente de sistema Linux (Hyprland). Sé corto, directo y profesional. Responde solo con lo necesario y ejecuta las acciones pedidas de forma eficiente."
     }
 }

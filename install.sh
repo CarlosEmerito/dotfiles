@@ -4,6 +4,11 @@
 # Arch Linux Hyprland & EmeBotEme Installer (Refactored)
 # ==============================================================================
 
+# Si alguien lo ejecuta con sh/dash, relanzar con bash (usamos arrays).
+if [ -z "${BASH_VERSION:-}" ]; then
+    exec bash "$0" "$@"
+fi
+
 # --- Colores y Estética ---
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -25,10 +30,10 @@ show_progress() {
     local task=$2
     local spin='-\|/'
     local i=0
-    local cyan=$(tput setaf 6)
-    local purple=$(tput setaf 5)
-    local bold=$(tput bold)
-    local reset=$(tput sgr0)
+    local cyan=$(tput setaf 6 2>/dev/null || true)
+    local purple=$(tput setaf 5 2>/dev/null || true)
+    local bold=$(tput bold 2>/dev/null || true)
+    local reset=$(tput sgr0 2>/dev/null || true)
 
     printf "${cyan}${bold}󱑮 %-25s [${reset}" "$task"
     while kill -0 $pid 2>/dev/null; do
@@ -46,7 +51,7 @@ show_progress() {
 }
 
 print_banner() {
-    clear
+    clear 2>/dev/null || true
     echo -e "${PURPLE}${BOLD}"
     echo "  ███████╗███╗   ███╗███████╗██████╗  ██████╗ ████████╗███████╗███╗   ███╗███████╗"
     echo "  ██╔════╝████╗ ████║██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝████╗ ████║██╔════╝"
@@ -62,6 +67,12 @@ if [[ $EUID -eq 0 ]]; then
     error "Este script NO debe ejecutarse como root. Usa un usuario normal con permisos sudo."
     exit 1
 fi
+
+# Pedir la contraseña una sola vez: los pacman/yay van en segundo plano con
+# un spinner y no pueden mostrar el prompt de sudo de forma fiable.
+sudo -v || { error "Se necesitan permisos sudo para instalar paquetes."; exit 1; }
+
+TARGET_USER="${USER:-$(id -un)}"
 
 # Detectar directorio real del repositorio
 REAL_SCRIPT_PATH=$(readlink -f "${BASH_SOURCE[0]}")
@@ -117,11 +128,13 @@ case $main_choice in
             zsh zsh-autosuggestions zsh-syntax-highlighting \
             starship eza bat \
             cliphist wl-clipboard swappy swaybg \
-            hyprland hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
+            hyprland hyprshutdown hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
             waybar rofi kitty nautilus grim slurp brightnessctl playerctl \
+            swaync libnotify ttf-font-awesome nwg-displays \
             pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
             papirus-icon-theme ttf-jetbrains-mono-nerd inotify-tools \
-            socat jq python \
+            socat jq python portaudio ffmpeg libmm-glib \
+            git curl base-devel \
             power-profiles-daemon networkmanager network-manager-applet bluez bluez-utils blueman \
             xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome fastfetch > /dev/null 2>&1 &
         show_progress $! "Instalando desde Pacman" || warn "Algunos paquetes Pacman fallaron"
@@ -129,11 +142,55 @@ case $main_choice in
         # ------------------------------------------------------------------
         # Paquetes AUR
         # ------------------------------------------------------------------
+        sudo -v || true
         info "Instalando desde AUR..."
-        yay -S --needed --noconfirm \
-            google-chrome swaync libnotify ttf-font-awesome nwg-displays \
-            catppuccin-gtk-theme-mocha > /dev/null 2>&1 &
+        yay -S --needed --noconfirm --answerclean None --answerdiff None --answeredit None \
+            google-chrome catppuccin-gtk-theme-mocha > /dev/null 2>&1 &
         show_progress $! "Compilando desde AUR" || warn "Algunos paquetes AUR fallaron"
+
+        # ------------------------------------------------------------------
+        # Waybar >= 0.16 para Hyprland 0.57 (IPC en Lua)
+        # ------------------------------------------------------------------
+        ensure_waybar_lua() {
+            command -v waybar >/dev/null 2>&1 || return 0
+            local ver pkg_file pkg_url
+            ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            [[ -n "$ver" ]] || return 0
+            [[ "$(printf '%s\n' 0.16.0 "$ver" | sort -V | head -1)" == "0.16.0" ]] && return 0
+
+            warn "Waybar $ver no soporta los dispatchers Lua de Hyprland 0.57: los clicks en workspaces no funcionan."
+            read -p "¿Instalar Waybar >= 0.16 desde extra-testing? (S/n): " waybar_testing
+            case "${waybar_testing:-S}" in
+                [nN])
+                    warn "Se mantiene Waybar $ver. Actualiza manualmente a >= 0.16."
+                    return 0
+                    ;;
+            esac
+
+            # Si 0.16 ya está en el repo estable, esto lo actualiza.
+            sudo pacman -S --needed --noconfirm waybar >/dev/null 2>&1 || true
+            ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [[ -n "$ver" ]] && [[ "$(printf '%s\n' 0.16.0 "$ver" | sort -V | head -1)" == "0.16.0" ]]; then
+                success "Waybar $ver instalado."
+                return 0
+            fi
+
+            # Fallback: paquete actual de extra-testing.
+            if command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+                pkg_file=$(curl -fsSL "https://archlinux.org/packages/extra-testing/x86_64/waybar/json/" 2>/dev/null | jq -r '.filename // empty')
+                if [[ -n "$pkg_file" ]]; then
+                    pkg_url="https://geo.mirror.pkgbuild.com/extra-testing/os/x86_64/$pkg_file"
+                    if curl -fsSL "$pkg_url" -o "/tmp/$pkg_file" && sudo pacman -U --noconfirm "/tmp/$pkg_file" >/dev/null 2>&1; then
+                        ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+                        success "Waybar $ver instalado desde extra-testing."
+                        return 0
+                    fi
+                fi
+            fi
+
+            warn "No se pudo instalar Waybar >= 0.16. Instala waybar-git o habilita extra-testing manualmente."
+        }
+        ensure_waybar_lua
 
         # ------------------------------------------------------------------
         # Habilitar servicios del sistema
@@ -242,12 +299,28 @@ case $main_choice in
                         continue
                         ;;
                     *)
-                        cp -r "$target" "${target}.bak"
-                        success "Backup creado: ${target}.bak"
+                        backup_path="${target}.bak.$(date +%Y%m%d-%H%M%S)"
+                        if cp -r "$target" "$backup_path"; then
+                            success "Backup creado: $backup_path"
+                        else
+                            error "No se pudo crear el backup; se conserva $target."
+                            continue
+                        fi
                         ;;
                 esac
                 rm -rf "$target"
             elif [[ -L "$target" ]]; then
+                if [[ "$(readlink -f "$target")" != "$dir" ]]; then
+                    warn "Symlink existente: $target -> $(readlink "$target")"
+                    read -p "¿Reemplazarlo por el del repo? (s/N): " symlink_choice
+                    case "${symlink_choice:-N}" in
+                        [sS]) ;;
+                        *)
+                            warn "Se conserva $target; no se enlaza $dir_name."
+                            continue
+                            ;;
+                    esac
+                fi
                 rm -f "$target"
             fi
             ln -sfn "$dir" "$target"
@@ -257,22 +330,61 @@ case $main_choice in
         # Carpetas usadas por los atajos de captura de pantalla
         mkdir -p "$HOME/Imágenes"
 
-        # Symlink directo de starship.toml (prioridad sobre starship/starship.toml)
-        if [[ -f "$DOTFILES_DIR/config/starship/starship.toml" ]]; then
-            ln -sf "$DOTFILES_DIR/config/starship/starship.toml" "$HOME/.config/starship.toml"
-        fi
+        # Ajustes GTK: se copian (no se enlazan) porque las apps escriben ahí.
+        for gtk_file in "gtk-3.0/settings.ini" "gtk-2.0/.gtkrc-2.0"; do
+            gtk_src="$DOTFILES_DIR/config/$gtk_file"
+            gtk_dst="$HOME/.config/$gtk_file"
+            [[ -f "$gtk_src" ]] || continue
+            mkdir -p "$(dirname "$gtk_dst")"
+            if [[ -f "$gtk_dst" ]] && ! cmp -s "$gtk_src" "$gtk_dst"; then
+                if ! cp "$gtk_dst" "$gtk_dst.bak.$(date +%Y%m%d-%H%M%S)"; then
+                    warn "No se pudo crear backup de $gtk_dst; se conserva."
+                    continue
+                fi
+            fi
+            install -m 644 "$gtk_src" "$gtk_dst"
+        done
 
-        # ------------------------------------------------------------------
-        # Oh My Zsh
-        # ------------------------------------------------------------------
-        if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
-            info "Instalando Oh My Zsh..."
-            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>/dev/null || warn "No se pudo instalar Oh My Zsh"
+        # Symlink directo de starship.toml (prioridad sobre starship/starship.toml)
+        STARSHIP_SRC="$DOTFILES_DIR/config/starship/starship.toml"
+        STARSHIP_DST="$HOME/.config/starship.toml"
+        if [[ -f "$STARSHIP_SRC" ]]; then
+            if [[ -f "$STARSHIP_DST" && ! -L "$STARSHIP_DST" ]]; then
+                warn "Config local detectada: $STARSHIP_DST"
+                read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " starship_backup
+                case "${starship_backup:-S}" in
+                    [nN])
+                        warn "Se conserva $STARSHIP_DST."
+                        ;;
+                    *)
+                        if cp "$STARSHIP_DST" "$STARSHIP_DST.bak.$(date +%Y%m%d-%H%M%S)"; then
+                            ln -sf "$STARSHIP_SRC" "$STARSHIP_DST"
+                        else
+                            warn "No se pudo crear backup; se conserva $STARSHIP_DST."
+                        fi
+                        ;;
+                esac
+            elif [[ -L "$STARSHIP_DST" ]] && [[ "$(readlink -f "$STARSHIP_DST")" != "$STARSHIP_SRC" ]]; then
+                warn "Symlink existente: $STARSHIP_DST -> $(readlink "$STARSHIP_DST")"
+                read -p "¿Reemplazarlo por el del repo? (s/N): " starship_link
+                case "${starship_link:-N}" in
+                    [sS]) ln -sf "$STARSHIP_SRC" "$STARSHIP_DST" ;;
+                    *) warn "Se conserva $STARSHIP_DST." ;;
+                esac
+            else
+                ln -sf "$STARSHIP_SRC" "$STARSHIP_DST"
+            fi
         fi
 
         # Backup .zshrc local antes de reemplazar
         link_zshrc=1
-        if [[ -f "$HOME/.zshrc" ]] && [[ ! -L "$HOME/.zshrc" ]]; then
+        if [[ -L "$HOME/.zshrc" ]] && [[ "$(readlink -f "$HOME/.zshrc")" != "$DOTFILES_DIR/.zshrc" ]]; then
+            warn "Symlink existente: ~/.zshrc -> $(readlink "$HOME/.zshrc")"
+            read -p "¿Reemplazarlo por el del repo? (s/N): " zsh_link
+            case "${zsh_link:-N}" in
+                [nN]) warn "Se conserva ~/.zshrc."; link_zshrc=0 ;;
+            esac
+        elif [[ -f "$HOME/.zshrc" ]] && [[ ! -L "$HOME/.zshrc" ]]; then
             warn "Config local detectada: ~/.zshrc"
             read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " zsh_backup
             case "${zsh_backup:-S}" in
@@ -281,9 +393,13 @@ case $main_choice in
                     link_zshrc=0
                     ;;
                 *)
-                    cp "$HOME/.zshrc" "$HOME/.zshrc.bak"
-                    success "Backup creado: ~/.zshrc.bak"
-                    rm -f "$HOME/.zshrc"
+                    if cp "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%Y%m%d-%H%M%S)"; then
+                        success "Backup de ~/.zshrc creado."
+                        rm -f "$HOME/.zshrc"
+                    else
+                        warn "No se pudo crear backup; se conserva ~/.zshrc."
+                        link_zshrc=0
+                    fi
                     ;;
             esac
         fi
@@ -297,8 +413,21 @@ case $main_choice in
             fi
         fi
 
+        # ------------------------------------------------------------------
+        # Oh My Zsh (después de enlazar .zshrc para que no lo sobrescriba)
+        # ------------------------------------------------------------------
+        if [[ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]]; then
+            info "Instalando Oh My Zsh..."
+            if command -v curl >/dev/null 2>&1; then
+                sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc 2>/dev/null || warn "No se pudo instalar Oh My Zsh"
+            else
+                warn "Falta curl; no se pudo instalar Oh My Zsh."
+            fi
+            [[ -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]] || warn "Oh My Zsh no quedó instalado correctamente."
+        fi
+
         # Agregar usuario a grupos necesarios (evita duplicados)
-        sudo usermod -aG video,input,audio "$USER" 2>/dev/null
+        sudo usermod -aG video,input,audio "$TARGET_USER" 2>/dev/null
 
         # ------------------------------------------------------------------
         # Menú de arranque
@@ -324,9 +453,11 @@ case $main_choice in
 [Service]
 Type=simple
 ExecStart=
-ExecStart=-/usr/bin/agetty --autologin $USER --noclear %I \$TERM
+ExecStart=-/usr/bin/agetty --autologin $TARGET_USER --noclear %I \$TERM
 EOF
                 if ! grep -q "exec Hyprland" ~/.zprofile 2>/dev/null; then
+                    # Asegurar una línea nueva antes de añadir el bloque.
+                    printf '\n' >> ~/.zprofile
                     cat >> ~/.zprofile <<'EOF'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
     exec Hyprland
@@ -337,9 +468,11 @@ EOF
                 ;;
             2)
                 info "Instalando y habilitando SDDM..."
-                sudo pacman -S --needed --noconfirm sddm > /dev/null 2>&1
-                sudo systemctl enable sddm 2>/dev/null
-                success "SDDM habilitado."
+                if sudo pacman -S --needed --noconfirm sddm > /dev/null 2>&1 && sudo systemctl enable sddm 2>/dev/null; then
+                    success "SDDM habilitado."
+                else
+                    error "No se pudo instalar o habilitar SDDM."
+                fi
                 ;;
             3)
                 info "Modo manual seleccionado. No se configuró auto-inicio."
@@ -350,7 +483,11 @@ EOF
         esac
         ;;
     2)
-        # Solo AI — no necesita paquetes del sistema
+        # Solo AI: dependencias mínimas para audio, captura y ventana de entrada.
+        info "Instalando dependencias mínimas de EmeBotEme..."
+        sudo pacman -S --needed --noconfirm \
+            python curl kitty grim slurp libnotify portaudio ffmpeg \
+            > /dev/null 2>&1 || warn "Algunos paquetes de EmeBotEme fallaron"
         ;;
     *)
         error "Opción inválida. Saliendo."
@@ -376,14 +513,43 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     # Copiar archivos de IA excluyendo __pycache__
     (cd "$DOTFILES_DIR/modules/ai" && tar cf - --exclude='__pycache__' .) | (cd "$AI_INSTALL_DIR/ai" && tar xf -)
 
-    # Reemplazar placeholder con ruta real de Opencode
-    sed -i "s|__OPCODE_PATH__|$HOME/.opencode/bin/opencode|" "$AI_INSTALL_DIR/ai/config.json"
+    # Opencode es el motor que responde a EmeBotEme.
+    if ! command -v opencode >/dev/null 2>&1 && [[ ! -x "$HOME/.opencode/bin/opencode" ]]; then
+        warn "Opencode no está instalado."
+        read -p "¿Instalar Opencode ahora con el instalador oficial? (S/n): " install_opencode
+        case "${install_opencode:-S}" in
+            [nN])
+                warn "La IA no podrá responder hasta que instales Opencode."
+                ;;
+            *)
+                if command -v curl >/dev/null 2>&1; then
+                    curl -fsSL https://opencode.ai/install | bash || warn "No se pudo instalar Opencode."
+                else
+                    warn "Falta curl; instala Opencode manualmente."
+                fi
+                ;;
+        esac
+    fi
+
+    # Reemplazar placeholder con la ruta real de Opencode.
+    OPENCODE_BIN=$(command -v opencode 2>/dev/null || true)
+    [[ -n "$OPENCODE_BIN" ]] || OPENCODE_BIN="$HOME/.opencode/bin/opencode"
+    if [[ ! -x "$OPENCODE_BIN" ]]; then
+        warn "No se encontró el ejecutable de Opencode en $OPENCODE_BIN."
+    fi
+    sed -i "s|__OPCODE_PATH__|$OPENCODE_BIN|" "$AI_INSTALL_DIR/ai/config.json"
 
     # Copiar focus_listener.sh al directorio de IA para que autostart.lua lo lance
     cp "$DOTFILES_DIR/core/scripts/focus_listener.sh" "$AI_INSTALL_DIR/focus_listener.sh"
     chmod +x "$AI_INSTALL_DIR/focus_listener.sh"
 
-    # Entorno virtual de Python
+    # Entorno virtual de Python. Si Arch actualizó Python, el venv anterior
+    # puede apuntar a un intérprete que ya no existe: se recrea.
+    if [[ -d "$AI_INSTALL_DIR/venv" ]] && ! "$AI_INSTALL_DIR/venv/bin/python" -V >/dev/null 2>&1; then
+        warn "El entorno virtual existente no es válido (¿cambio de versión de Python?). Recreando..."
+        rm -rf "$AI_INSTALL_DIR/venv"
+    fi
+
     if [[ ! -d "$AI_INSTALL_DIR/venv" ]]; then
         info "Creando entorno virtual de Python..."
         if ! command -v python3 &> /dev/null; then
@@ -408,13 +574,13 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     DOT_ENV_FILE="$AI_INSTALL_DIR/.env"
 
     # Gestión de HF_TOKEN
-    if [[ -z "$HF_TOKEN" ]]; then
+    if [[ -z "${HF_TOKEN:-}" ]]; then
         if [[ -f "$DOT_ENV_FILE" ]]; then
-            HF_TOKEN=$(grep '^HF_TOKEN=' "$DOT_ENV_FILE" | cut -d'=' -f2-)
+            HF_TOKEN=$(sed -nE 's/^(export[[:space:]]+)?HF_TOKEN=//p' "$DOT_ENV_FILE" | tail -1 | tr -d '"')
         fi
     fi
 
-    if [[ -z "$HF_TOKEN" ]]; then
+    if [[ -z "${HF_TOKEN:-}" ]]; then
         warn "No se encontró HF_TOKEN configurado."
         read -r -p "Introduce tu HF_TOKEN de Hugging Face (deja vacío para omitir): " hf_token
         if [[ -n "$hf_token" ]]; then
@@ -433,15 +599,8 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
     # El token es un secreto: solo el usuario debe poder leerlo.
     [[ -f "$DOT_ENV_FILE" ]] && chmod 600 "$DOT_ENV_FILE"
 
-    # Servicio systemd --user
-    mkdir -p "$HOME/.config/systemd/user"
-    cp "$DOTFILES_DIR/core/services/emeboteme.service" "$HOME/.config/systemd/user/"
-    sed -i "s|ExecStart=.*|ExecStart=$AI_INSTALL_DIR/venv/bin/python -u $AI_INSTALL_DIR/ai/main.py|" "$HOME/.config/systemd/user/emeboteme.service"
-
-    systemctl --user daemon-reload 2>/dev/null || warn "No se pudo recargar systemd --user (quizás no hay sesión)"
-    systemctl --user enable --now emeboteme.service 2>/dev/null || warn "No se pudo habilitar el servicio EmeBotEme (se iniciará al próximo inicio de sesión)"
-
-    # Pre-descarga de modelos Whisper
+    # Pre-descarga de modelos Whisper antes de arrancar el servicio, para que
+    # no descarguen a la vez el instalador y el servicio.
     info "Descargando modelos de IA (Whisper tiny y base)..."
     if "$AI_INSTALL_DIR/venv/bin/python" -c "from faster_whisper import WhisperModel; WhisperModel('tiny'); WhisperModel('base')" > /tmp/whisper_download.log 2>&1; then
         success "Modelos descargados correctamente."
@@ -450,22 +609,36 @@ if [[ $main_choice == "1" || $main_choice == "2" ]]; then
         warn "Es posible que la IA no funcione correctamente sin conexión o espacio en disco."
     fi
 
+    # Servicio systemd --user
+    mkdir -p "$HOME/.config/systemd/user"
+    cp "$DOTFILES_DIR/core/services/emeboteme.service" "$HOME/.config/systemd/user/"
+    sed -i "s|ExecStart=.*|ExecStart=\"$AI_INSTALL_DIR/venv/bin/python\" -u \"$AI_INSTALL_DIR/ai/main.py\"|" "$HOME/.config/systemd/user/emeboteme.service"
+
+    # Pasar el entorno gráfico al gestor de usuario para que el servicio pueda
+    # usar Wayland/grim/kitty aunque se inicie antes que la barra.
+    systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE 2>/dev/null || true
+    systemctl --user daemon-reload 2>/dev/null || warn "No se pudo recargar systemd --user (quizás no hay sesión)"
+    systemctl --user enable --now emeboteme.service 2>/dev/null || warn "No se pudo habilitar el servicio EmeBotEme (se iniciará al próximo inicio de sesión)"
+
     success "IA configurada."
 fi
 
 # ------------------------------------------------------------------
-# Comprobación de binarios usados por autostart.lua
+# Comprobación de binarios del entorno gráfico
 # ------------------------------------------------------------------
-for cmd in swaybg nm-applet blueman-applet hyprshutdown; do
-    command -v "$cmd" >/dev/null 2>&1 || warn "Falta '$cmd'; autostart.lua lo omitirá. Instálalo si quieres esa función."
-done
+if [[ $main_choice == "1" || $main_choice == "3" ]]; then
+    for cmd in waybar swaync swaybg nm-applet blueman-applet google-chrome-stable kitty rofi nautilus grim slurp cliphist; do
+        command -v "$cmd" >/dev/null 2>&1 || warn "Falta '$cmd'; revisa la instalación de paquetes (era parte del entorno gráfico)."
+    done
+    command -v hyprshutdown >/dev/null 2>&1 || warn "Falta 'hyprshutdown' (opcional); SUPER+M usará el fallback de Hyprland."
 
-# Hyprland 0.57 usa dispatchers Lua. Waybar < 0.16 sigue enviando
-# "dispatch workspace N" por IPC y los clicks en workspaces no hacen nada.
-if command -v waybar >/dev/null 2>&1; then
-    waybar_ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-    if [[ -n "$waybar_ver" ]] && [[ "$(printf '%s\n' 0.16.0 "$waybar_ver" | sort -V | head -1)" != "0.16.0" ]]; then
-        warn "Waybar $waybar_ver es anterior a 0.16.0: los clicks en workspaces no funcionan con Hyprland 0.57 (Lua). Actualiza a Waybar >= 0.16."
+    # Hyprland 0.57 usa dispatchers Lua. Waybar < 0.16 sigue enviando
+    # "dispatch workspace N" por IPC y los clicks en workspaces no hacen nada.
+    if command -v waybar >/dev/null 2>&1; then
+        waybar_ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        if [[ -n "$waybar_ver" ]] && [[ "$(printf '%s\n' 0.16.0 "$waybar_ver" | sort -V | head -1)" != "0.16.0" ]]; then
+            warn "Waybar $waybar_ver es anterior a 0.16.0: los clicks en workspaces no funcionan con Hyprland 0.57 (Lua). Actualiza a Waybar >= 0.16."
+        fi
     fi
 fi
 

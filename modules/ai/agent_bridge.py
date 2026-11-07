@@ -1,6 +1,7 @@
 import subprocess
 import os
 import json
+import shlex
 
 class AgentBridge:
     """
@@ -8,11 +9,12 @@ class AgentBridge:
     Utiliza el motor nativo de sesiones de Opencode para mantener el estado
     sin depender de procesos externos como TMUX.
     """
-    
-    def __init__(self, command: str, system_prompt: str, model: str = "opencode/deepseek-v4-flash-free"):
-        self.raw_command = command
+
+    def __init__(self, command: str, system_prompt: str, model: str = "opencode/deepseek-v4-flash-free", vision_model: str = None):
+        self.raw_command = os.path.expanduser(command)
         self.system_prompt = system_prompt
         self.model = model
+        self.vision_model = vision_model or model
         self.is_running = True
         self.session_file = os.path.expanduser("~/.config/emebot_session_id")
         self.session_id = self._load_session_id()
@@ -35,12 +37,12 @@ class AgentBridge:
         """Garantiza que tenemos un ID de sesión válido, creándolo si es necesario."""
         if self.session_id:
             return self.session_id
-        
+
         # Si no hay sesión, creamos una silenciosamente
         try:
             cmd = [
-                self.raw_command, "run", "System Init", 
-                "--title", "EmeBotEme Voice Session", 
+                self.raw_command, "run", "System Init",
+                "--title", "EmeBotEme Voice Session",
                 "--format", "json",
                 "--model", self.model
             ]
@@ -56,7 +58,7 @@ class AgentBridge:
                     continue
         except Exception as e:
             print(f"[ERROR] No se pudo inicializar la sesión de Opencode: {e}")
-        
+
         return None
 
     def clear_session(self):
@@ -92,26 +94,34 @@ class AgentBridge:
         # Limpieza de ventanas previas
         address = self._get_popup_address()
         if address:
-            subprocess.run(["hyprctl", "dispatch", "closewindow", f"address:{address}"], check=False)
+            subprocess.run(["hyprctl", "dispatch", f'hl.dsp.window.close({{ window = "address:{address}" }})'], check=False)
 
-        safe_text = text.replace('"', '\\"')
-        
-        # Construcción del comando
-        base = f"{self.raw_command} run --dangerously-skip-permissions -m {self.model}"
+        # Modelo específico para visión cuando se adjunta una imagen
+        model = self.vision_model if image_path else self.model
+
+        # Construcción del comando. Todo lo que viene del usuario o de la
+        # configuración se cita para que sh -c no interprete $, backticks, etc.
+        raw_command = os.path.expanduser(self.raw_command)
+        base = f"{shlex.quote(raw_command)} run --dangerously-skip-permissions -m {shlex.quote(model)}"
         if session_id:
-            base += f" --session {session_id}"
-        
+            base += f" --session {shlex.quote(session_id)}"
+
         # Añadir archivo de imagen si se proporciona
         if image_path:
-            base += f" -f \"{image_path}\""
-        
-        full_opencode_cmd = f"{base} -- \"{self.system_prompt}\" \"{safe_text}\""
+            base += f" -f {shlex.quote(image_path)}"
+
+        full_opencode_cmd = (
+            f"{base} -- {shlex.quote(self.system_prompt)} {shlex.quote(text)}"
+        )
 
         # UI Script
-        user_display = f"echo -e '\\033[1;32m󰔊 Tú:\\033[0m {safe_text}\\n'"
+        user_display = (
+            "printf '\\033[1;32m󰔊 Tú:\\033[0m %s\\n' "
+            f"{shlex.quote(text)}"
+        )
         thinking_msg = "echo -e '\\033[1;35m󰚩 Pensando...\\033[0m'"
         filter_cmd = "stdbuf -i0 -o0 -e0 grep -v '^> ' --line-buffered"
-        
+
         ui_script = (
             f"clear; {user_display}; {thinking_msg}; "
             f"{full_opencode_cmd} 2>&1 | {filter_cmd}; "
@@ -139,10 +149,7 @@ class AgentBridge:
         """Cierra la ventana actual."""
         address = self._get_popup_address()
         if address:
-            subprocess.run(["hyprctl", "dispatch", "closewindow", f"address:{address}"], check=False)
-
-    def detach_session(self) -> None:
-        self.interrupt_command()
+            subprocess.run(["hyprctl", "dispatch", f'hl.dsp.window.close({{ window = "address:{address}" }})'], check=False)
 
     def stop(self) -> None:
         self.is_running = False
