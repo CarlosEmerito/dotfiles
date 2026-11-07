@@ -460,6 +460,15 @@ for cmd in swaybg nm-applet blueman-applet hyprshutdown; do
     command -v "$cmd" >/dev/null 2>&1 || warn "Falta '$cmd'; autostart.lua lo omitirá. Instálalo si quieres esa función."
 done
 
+# Hyprland 0.57 usa dispatchers Lua. Waybar < 0.16 sigue enviando
+# "dispatch workspace N" por IPC y los clicks en workspaces no hacen nada.
+if command -v waybar >/dev/null 2>&1; then
+    waybar_ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    if [[ -n "$waybar_ver" ]] && [[ "$(printf '%s\n' 0.16.0 "$waybar_ver" | sort -V | head -1)" != "0.16.0" ]]; then
+        warn "Waybar $waybar_ver es anterior a 0.16.0: los clicks en workspaces no funcionan con Hyprland 0.57 (Lua). Actualiza a Waybar >= 0.16."
+    fi
+fi
+
 echo ""
 info "¡Instalación completada!"
 read -p "¿Reiniciar ahora? (s/n): " confirm_reboot

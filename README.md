@@ -96,6 +96,7 @@ El instalador te guiará a través de:
 *   **GPU:** El repo trae activadas las variables de NVIDIA (`LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `NVD_BACKEND=direct`). El instalador pregunta por tu GPU y descomenta solo el bloque correspondiente (Intel, NVIDIA o AMD) en `config/hypr/envvariables.lua`. Después de cambiar de GPU, reinicia la sesión para que las apps nuevas hereden las variables.
 *   **Hyprland:** la configuración usa Lua (`config/hypr/*.lua`) desde Hyprland 0.55+ (probado con 0.57). Los antiguos `.conf` están en `config/hypr/legacy/` solo como referencia y **ya no se cargan**.
 *   **nwg-displays:** guarda `monitors.lua` y `workspaces.lua` (además de los `.conf` de compatibilidad). Hyprland carga los `.lua`; editar los `.conf` no aplica cambios. `workspaces.lua` se carga con `require("workspaces")`.
+*   **Waybar:** con Hyprland 0.57 (Lua) se necesita **Waybar >= 0.16**. Waybar 0.15.x sigue enviando `dispatch workspace N` por IPC y los clicks en los workspaces no hacen nada; Waybar 0.16 traduce esos dispatchers a `hl.dsp.*`.
 *   **Modo Visión:** Requiere `grim` y `slurp` para captura de pantalla. La imagen se pasa al agente Opencode para su análisis.
 *   **Entrada de Texto:** Usa `prompt_toolkit` con atajos: `Ctrl+H` borra palabra completa, `Escape` cierra sin guardar.
 *   **Starship:** El prompt es minimalista (`~ ❯`). La configuración está en `config/starship/starship.toml`. El instalador crea symlinks tanto en `~/.config/starship.toml` como en `~/.config/starship/` para cubrir ambos paths de búsqueda.
