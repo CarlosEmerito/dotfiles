@@ -10,17 +10,18 @@ hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 -- Usa decoraciones del lado del servidor en Qt/Wayland para evitar doble barra de título.
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 -- Prioriza Wayland en aplicaciones GTK, permitiendo fallback a X11.
-hl.env("GDK_BACKEND", "wayland,x11,*")
+hl.env("GDK_BACKEND", "wayland,x11")
 -- Prioriza backend Wayland para aplicaciones basadas en Clutter.
 hl.env("CLUTTER_BACKEND", "wayland")
 -- Permite que apps Electron elijan automáticamente Ozone (normalmente Wayland en Hyprland).
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
 -- ──────────────────────────────────────────
--- GPU — Descomenta SOLO el de tu hardware
+-- GPU — El instalador descomenta SOLO el bloque de tu GPU.
+-- Estado actual del repo: NVIDIA.
 -- ──────────────────────────────────────────
 
--- Intel (default)
+-- Intel
 -- hl.env("LIBVA_DRIVER_NAME", "iHD")
 -- hl.env("MESA_LOADER_DRIVER_NAME", "iris")
 

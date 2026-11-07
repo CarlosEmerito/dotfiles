@@ -1,0 +1,10 @@
+-- EmeDotEme — Reglas de workspaces
+-- Este archivo lo genera nwg-displays al aplicar la pestaña "Workspaces".
+-- Si no usas esa pestaña, puede quedarse vacío.
+--
+-- Ejemplo de lo que escribe nwg-displays:
+-- hl.workspace_rule({
+--     workspace = "1",
+--     monitor = "HDMI-A-1",
+--     default = true
+-- })

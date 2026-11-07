@@ -2,3 +2,6 @@
 .zshrc.bak
 __pycache__/
 *.wav
+config/pulse/
+config/hypr/workspaces.conf
+config/nwg-displays/config

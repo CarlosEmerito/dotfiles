@@ -85,4 +85,4 @@ hl.bind(mainMod .. " + V", hl.dsp.exec_cmd([[cliphist list | rofi -dmenu -displa
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd([[grim -g "$(slurp)" - | swappy -f -]]))
 
 -- Emergencia: restaurar solo el portátil (sale de pantalla negra)
-hl.bind(mainMod .. " + F5", hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "1920x1080@240", position = "0x0", scale = 1.33 })'; hyprctl eval 'hl.monitor({ output = "HDMI-A-1", disabled = true })']]))
+hl.bind(mainMod .. " + F5", hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.33 })'; hyprctl eval 'hl.monitor({ output = "HDMI-A-1", disabled = true })']]))
