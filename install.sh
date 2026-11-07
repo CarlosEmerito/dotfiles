@@ -68,6 +68,11 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
+if ! command -v sudo >/dev/null 2>&1; then
+    error "sudo no está instalado. Instálalo como root (pacman -S sudo) y añade tu usuario a wheel."
+    exit 1
+fi
+
 # Pedir la contraseña una sola vez: los pacman/yay van en segundo plano con
 # un spinner y no pueden mostrar el prompt de sudo de forma fiable.
 sudo -v || { error "Se necesitan permisos sudo para instalar paquetes."; exit 1; }
@@ -87,6 +92,8 @@ echo ""
 # Gestión de pacman
 # ------------------------------------------------------------------
 info "Actualizando base de datos de paquetes..."
+# Refrescar el llavero primero evita fallos de firmas en ISOs antiguas.
+sudo pacman -Sy --needed --noconfirm archlinux-keyring > /dev/null 2>&1 || true
 sudo pacman -Syu --noconfirm > /dev/null 2>&1 || warn "Falló la actualización (puede continuar)"
 
 # ------------------------------------------------------------------
