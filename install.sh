@@ -137,7 +137,7 @@ case $main_choice in
             cliphist wl-clipboard swappy swaybg \
             hyprland hyprshutdown hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
             waybar rofi kitty nautilus grim slurp brightnessctl playerctl \
-            swaync libnotify ttf-font-awesome nwg-displays \
+            swaync libnotify otf-font-awesome nwg-displays \
             pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
             papirus-icon-theme ttf-jetbrains-mono-nerd inotify-tools \
             socat jq python portaudio ffmpeg libmm-glib \
