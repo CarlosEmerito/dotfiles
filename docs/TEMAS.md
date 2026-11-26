@@ -29,7 +29,7 @@ Paleta y archivos que forman el aspecto visual del escritorio.
 | Hyprlock | `home/.config/hypr/hyprlock.conf` |
 | Starship | `home/.config/starship/starship.toml` |
 | btop | `home/.config/btop/themes/violet.theme` |
-| Fondo | `home/.local/share/wallpapers/lanzador-oscuro.png` |
+| Fondo | `home/.config/hypr/autostart.lua` (negro sólido con `swaybg`) |
 
 ## Cómo cambiar el acento
 

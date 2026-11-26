@@ -307,7 +307,6 @@ LINK_FILES=(
     ".config/user-dirs.dirs"
     ".local/share/applications/bluetui.desktop"
     ".local/share/applications/opencode.desktop"
-    ".local/share/wallpapers/lanzador-oscuro.png"
 )
 
 COPY_FILES=(

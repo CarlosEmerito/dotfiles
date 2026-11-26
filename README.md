@@ -78,7 +78,7 @@ dotfiles/
 ├── home/               Copia de la carpeta personal
 │   ├── .zshrc  .zprofile  .bashrc  .bash_profile
 │   ├── .config/        Hyprland, Waybar, Kitty, Rofi, servicios…
-│   └── .local/share/   Lanzadores .desktop y fondo de pantalla
+│   └── .local/share/   Lanzadores .desktop
 ├── bin/                Scripts propios para ~/.local/bin
 └── docs/               Guías
 ```
