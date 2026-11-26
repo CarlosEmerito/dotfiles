@@ -5,11 +5,22 @@
     "spacing": 4,
     "exclusive": true,
     "gtk-layer": true,
-
-    "modules-left": ["hyprland/workspaces", "hyprland/window"],
-    "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "backlight", "network", "temperature", "cpu", "battery", "tray"],
-
+    "modules-left": [
+        "hyprland/workspaces",
+        "hyprland/window"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "pulseaudio",
+        "backlight",
+        "network",
+        "temperature",
+        "cpu",
+        "battery",
+        "tray"
+    ],
     "clock": {
         "format": " {:%H:%M}",
         "interval": 30,
@@ -25,7 +36,6 @@
             }
         }
     },
-
     "temperature": {
         "interval": 10,
         "tooltip": true,
@@ -34,37 +44,47 @@
             "/sys/class/thermal/thermal_zone0/temp"
         ],
         "critical-threshold": 82,
-        "format-critical": "{temperatureC}°C {icon}",
-        "format": "{temperatureC}°C {icon}",
-        "format-icons": ["󰈸"]
+        "format-critical": "{temperatureC}°C  {icon}",
+        "format": "{temperatureC}°C  {icon}",
+        "format-icons": [
+            "󰈸"
+        ]
     },
-
     "cpu": {
-        "format": " 󰍛 {usage}%",
+        "format": " 󰍛  {usage}%",
         "tooltip": true,
         "interval": 2,
         "states": {
             "high": 70
         }
     },
-
     "battery": {
         "states": {
             "good": 95,
             "warning": 30,
             "critical": 15
         },
-        "format": " {icon} {capacity}%",
-        "format-charging": " 󰂄 {capacity}%",
-        "format-plugged": " 󰂄 {capacity}%",
+        "format": " {icon}  {capacity}%",
+        "format-charging": " 󰂄  {capacity}%",
+        "format-plugged": " 󰂄  {capacity}%",
         "format-alt": "{icon} {capacity}%",
-        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+        "format-icons": [
+            "󰁺",
+            "󰁻",
+            "󰁼",
+            "󰁽",
+            "󰁾",
+            "󰁿",
+            "󰂀",
+            "󰂁",
+            "󰂂",
+            "󰁹"
+        ],
         "tooltip": true
     },
-
     "network": {
-        "format-wifi": " 󰤨 {signalStrength}%",
-        "format-ethernet": " 󰈀 {ipaddr}/{cidr}",
+        "format-wifi": " 󰤨   {signalStrength}%",
+        "format-ethernet": " 󰈀  {ipaddr}/{cidr}",
         "tooltip-format": "{ifname} via {gwaddr}",
         "format-linked": " 󰈀 {ifname} (No IP)",
         "format-disconnected": "󰤭",
@@ -72,9 +92,8 @@
         "interval": 5,
         "tooltip": true
     },
-
     "pulseaudio": {
-        "format": "{icon} {volume}%",
+        "format": "{icon}  {volume}%",
         "format-bluetooth": "{icon} {volume}%",
         "format-bluetooth-muted": " 󰝛",
         "format-muted": " 󰝟",
@@ -87,29 +106,34 @@
             "phone": "󰏎",
             "portable": "󰕒",
             "car": "󰟔",
-            "default": ["󰕿", "󰖀", "󰕾"]
+            "default": [
+                "󰕿",
+                "󰖀",
+                "󰕾"
+            ]
         },
         "tooltip": true
     },
-
     "backlight": {
-        "format": "{icon} {percent}%",
-        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "format": "{icon}  {percent}%",
+        "format-icons": [
+            "󰃞",
+            "󰃟",
+            "󰃠"
+        ],
         "on-scroll-up": "brightnessctl set 1%+",
         "on-scroll-down": "brightnessctl set 1%-",
         "min-length": 6
     },
-
     "tray": {
         "icon-size": 16,
         "spacing": 10
     },
-
     "hyprland/workspaces": {
         "disable-scroll": false,
         "all-outputs": true,
         "sort-by-number": true,
-        "format": "{icon} {windows}",
+        "format": "{icon}  {windows}",
         "format-window-separator": " ",
         "window-rewrite-default": " ",
         "persistent-workspaces": {
@@ -131,7 +155,6 @@
         "window-rewrite": {
             "title<.*amazon.*>": " ",
             "title<.*reddit.*>": " ",
-
             "class<firefox|org.mozilla.firefox|librewolf|floorp|mercury-browser|[Cc]achy-browser>": " ",
             "class<zen>": "󰰷 ",
             "class<waterfox|waterfox-bin>": " ",
@@ -140,17 +163,14 @@
             "class<brave-browser>": "🦁 ",
             "class<tor browser>": " ",
             "class<firefox-developer-edition>": "🦊 ",
-
             "class<kitty|konsole|[Aa]lacritty>": " ",
             "class<kitty-dropterm>": " ",
             "class<com.mitchellh.ghostty>": " ",
             "class<org.wezfurlong.wezterm>": " ",
             "class<Warp|warp|dev.warp.Warp|warp-terminal>": "󰰭 ",
-
             "class<[Tt]hunderbird|[Tt]hunderbird-esr>": " ",
             "class<eu.betterbird.Betterbird>": " ",
             "title<.*gmail.*>": "󰊫 ",
-
             "class<[Tt]elegram-desktop|org.telegram.desktop|io.github.tdesktop_x64.TDesktop>": " ",
             "class<discord|discord-canary|[Ww]ebcord|[Vv]esktop|com.discordapp.Discord|dev.vencord.Vesktop>": " ",
             "class<[Ss]ignal|signal-desktop|org.signal.Signal>": "󰍩 ",
@@ -160,13 +180,11 @@
             "title<.*messenger.*>": " ",
             "title<.*facebook.*>": " ",
             "title<.*Discord.*>": " ",
-
             "title<.*ChatGPT.*>": "󰚩 ",
             "title<.*deepseek.*>": "󰚩 ",
             "title<.*qwen.*>": "󰚩 ",
             "class<subl>": "󰅳 ",
             "class<slack>": " ",
-
             "class<mpv>": " ",
             "class<celluloid|Zoom>": " ",
             "class<Cider>": "󰎆 ",
@@ -178,14 +196,12 @@
             "title<.*cmus.*>": " ",
             "class<[Ss]potify>": " ",
             "class<Plex>": "󰚺 ",
-
             "class<virt-manager>": " ",
             "class<.virt-manager-wrapped>": " ",
             "class<remote-viewer|virt-viewer>": " ",
             "class<virtualbox manager>": "💽 ",
             "title<virtualbox>": "💽 ",
             "class<remmina|org.remmina.Remmina>": "🖥️ ",
-
             "class<VSCode|code|code-url-handler|code-oss|codium|codium-url-handler|VSCodium>": "󰨞 ",
             "class<dev.zed.Zed>": "󰵁",
             "class<codeblocks>": "󰅩 ",
@@ -200,9 +216,7 @@
             "title<.*figma.*>": " ",
             "title<.*jira.*>": " ",
             "class<jetbrains-idea>": " ",
-
             "class<obs|com.obsproject.Studio>": " ",
-
             "class<polkit-gnome-authentication-agent-1>": "󰒃 ",
             "class<nwg-look>": " ",
             "class<nwg-displays>": " ",
@@ -216,16 +230,12 @@
             "class<org.pipewire.Helvum>": "󰓃",
             "class<localsend>": "",
             "class<PrusaSlicer|UltiMaker-Cura|OrcaSlicer>": "󰹛",
-
             "class<io.github.kolunmi.Bazaar>": " ",
             "title<^Bazaar$>": " ",
-
             "class<com.gabm.satty>": " ",
             "title<^satty$>": " ",
-
             "class<[Bb]ox[Bb]uddy|io.github.dvlv.boxbuddy|io.github.dvlv.BoxBuddy>": " ",
             "title<.*BoxBuddy.*>": " ",
-
             "title<Hyprland Keybinds>": " ",
             "title<Niri Keybinds>": " ",
             "title<BSPWM Keybinds>": " ",
@@ -241,7 +251,6 @@
             "title<^qs-wlogout$>": " "
         }
     },
-
     "hyprland/window": {
         "format": "{}",
         "max-length": 50,
