@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Menú de apagado con el estilo de Rofi.
+
+set -u
+
+choice=$(printf '%s\n' \
+    "Bloquear" \
+    "Cerrar sesión" \
+    "Reiniciar" \
+    "Apagar" \
+    "Cancelar" |
+    rofi -dmenu -i -p "Sistema" \
+        -theme-str 'window { width: 380px; } listview { columns: 1; lines: 5; } prompt { enabled: true; } entry { placeholder: "Elige una opción…"; }')
+
+[[ -z "$choice" || "$choice" == "Cancelar" ]] && exit 0
+
+case "$choice" in
+    Bloquear)         exec hyprlock ;;
+    "Cerrar sesión")  exec hyprctl dispatch exit ;;
+    Reiniciar)        exec systemctl reboot ;;
+    Apagar)           exec systemctl poweroff ;;
+esac

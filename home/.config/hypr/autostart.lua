@@ -8,7 +8,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("command -v hyprctl >/dev/null 2>&1 && hyprctl systeminfo >/dev/null 2>&1")
 
     -- Fondo, barra y notificaciones (solo si están instalados y no están ya corriendo)
-    hl.exec_cmd("command -v swaybg >/dev/null 2>&1 && ! pgrep -x swaybg >/dev/null 2>&1 && swaybg -m solid -c 000000")
+    hl.exec_cmd("command -v swaybg >/dev/null 2>&1 && ! pgrep -x swaybg >/dev/null 2>&1 && ( [ -f \"$HOME/.local/share/wallpapers/lanzador-oscuro.png\" ] && swaybg -m fill -i \"$HOME/.local/share/wallpapers/lanzador-oscuro.png\" || swaybg -m solid -c 000000 )")
     hl.exec_cmd("command -v waybar >/dev/null 2>&1 && ! pgrep -x waybar >/dev/null 2>&1 && waybar")
     hl.exec_cmd("command -v swaync >/dev/null 2>&1 && ! pgrep -x swaync >/dev/null 2>&1 && swaync")
 

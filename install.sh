@@ -307,6 +307,7 @@ LINK_FILES=(
     ".config/user-dirs.dirs"
     ".local/share/applications/bluetui.desktop"
     ".local/share/applications/opencode.desktop"
+    ".local/share/wallpapers/lanzador-oscuro.png"
 )
 
 COPY_FILES=(
@@ -393,7 +394,7 @@ do_config() {
 
 # --- Paquetes ----------------------------------------------------------------
 OFFICIAL_PKGS=(
-    hyprland hyprshutdown hyprcursor hyprland-guiutils
+    hyprland hyprshutdown hyprlock hyprcursor hyprland-guiutils
     waybar swaync swaybg rofi kitty nwg-displays
     grim slurp swappy wl-clipboard cliphist libnotify
     brightnessctl playerctl

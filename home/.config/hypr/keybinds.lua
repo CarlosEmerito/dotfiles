@@ -19,6 +19,9 @@ hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + SPACE",  hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + N",      hl.dsp.exec_cmd("swaync-client -t"))
 hl.bind(mainMod .. " + F",      hl.dsp.exec_cmd("google-chrome-stable"))
+hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("power-menu"))
+hl.bind(mainMod .. " + SHIFT + SPACE", hl.dsp.exec_cmd("rofi -show window"))
 
 ---------------------------
 ---- FOCO / WORKSPACES ----
