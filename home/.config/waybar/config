@@ -135,6 +135,7 @@
         "sort-by-number": true,
         "format": "{icon}  {windows}",
         "format-window-separator": " ",
+        "tooltip": false,
         "window-rewrite-default": " ",
         "persistent-workspaces": {
             "*": 5
