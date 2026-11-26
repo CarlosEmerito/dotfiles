@@ -48,32 +48,6 @@ window#waybar.hidden {
     background: rgba(255, 85, 85, 0.15);
 }
 
-#custom-asistente {
-    background: rgba(157, 78, 221, 0.1);
-    color: @purple;
-    border-radius: 8px;
-    margin: 4px;
-    padding: 0 10px;
-}
-
-#custom-asistente.RECORDING {
-    background: rgba(255, 85, 85, 0.2);
-    color: @red;
-    animation: blink 0.5s linear infinite alternate;
-}
-
-#custom-asistente.PROCESSING {
-    background: rgba(249, 211, 66, 0.2);
-    color: @yellow;
-    animation: pulse 1.5s infinite ease-in-out;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
-}
-
 #clock,
 #battery,
 #cpu,

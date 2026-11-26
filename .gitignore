@@ -1,7 +1,22 @@
+# Secretos: nunca se versionan
 .env
-.zshrc.bak
+.env.*
+!.env.example
+.npmrc
+.git-credentials
+*.token
+
+# Copias de seguridad y temporales
+*.bak
+*.bak.*
+*.orig
+*.rej
+*~
+.DS_Store
 __pycache__/
-*.wav
-config/pulse/
-config/hypr/workspaces.conf
-config/nwg-displays/config
+*.pyc
+
+# Estado específico de cada equipo (lo genera nwg-displays / Hyprland)
+home/.config/hypr/monitors.lua
+home/.config/hypr/monitors.conf
+home/.config/hypr/workspaces.conf

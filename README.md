@@ -1,118 +1,116 @@
-# 🌌 EmeDotEme - Hyprland + AI Assistant Suite
+# Dotfiles de Hyprland
 
-[![Arch Linux](https://img.shields.io/badge/OS-Arch%20Linux-blue?logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Hyprland](https://img.shields.io/badge/Compositor-Hyprland-brightgreen)](https://hyprland.org/)
-[![AI Assistant](https://img.shields.io/badge/AI-Proyecto-purple)](https://emedoteme.es)
+Configuración personal de Arch Linux + Hyprland, pensada para reinstalar el
+escritorio en un equipo nuevo con un solo comando.
 
-Una suite completa de **Dotfiles** para Arch Linux diseñada para la productividad, la estética y la integración de Inteligencia Artificial mediante voz.
+## Qué incluye
 
----
+- **Hyprland** (configuración en Lua), Waybar, Kitty, Rofi, SwayNC, Swappy.
+- **Starship**, Zsh, btop y fastfetch.
+- **Servicios de usuario** de systemd (copias de seguridad, analíticas, etc.).
+- **Scripts propios** en `~/.local/bin`.
+- Un **instalador** que enlaza o copia cada cosa en su sitio, con copias de
+  seguridad y modo simulación.
 
-## ✨ Características Principales
+No incluye secretos, tokens, cachés ni el estado interno de las aplicaciones.
 
-*   **💻 Entorno Hyprland:** Layout dinámico, animaciones fluidas y estética moderna.
-*   **🎙️ Proyecto AI:** Asistente de voz y texto integrado con modo **Visión** (captura de pantalla + consulta), entrada multi-línea, y gestión de sesiones.
-*   **🐚 Shell Moderno:** **Starship** prompt minimalista (`~ ❯`), `eza` para listados con iconos y `bat` para lectura de archivos con resaltado.
-*   **🚀 Instalador Inteligente:** Script `install.sh` que configura todo el entorno, desde paquetes base hasta servicios de IA.
-*   **🎨 Estética Coherente:** Waybar con control de brillo nativo, SwayNC para notificaciones y temas GTK/Kitty integrados.
+## Requisitos
 
----
+- Arch Linux (con `pacman`).
+- Un usuario normal con `sudo`.
+- Hyprland 0.57 o superior (la configuración usa Lua).
+- Waybar 0.16 o superior para que los clics en los workspaces funcionen.
 
-## 🤖 Proyecto: Tu Asistente Inteligente
-
-Proyecto es un agente multimodal (voz/texto/visión) que vive en tu barra de tareas y se comunica con **Opencode**.
-
-*   **Push-to-Talk:** Mantén pulsado `Super + Alt + Z` para hablar. Suelta para procesar.
-*   **Entrada de Texto:** `Super + Alt + X` abre un editor multi-línea con `prompt_toolkit`.
-*   **Modo Visión:** `Super + Alt + S` captura la pantalla con `grim` y abre un prompt para consultar sobre ella.
-*   **Nueva Sesión:** `Super + Alt + C` reinicia el contexto de la conversación.
-*   **Sesiones Aisladas:** Utiliza la persistencia nativa de Opencode para aislar el contexto de voz de tus terminales de trabajo.
-*   **Arquitectura Limpia:** Sin dependencias de TMUX; lanza ventanas de Kitty directamente.
-*   **Hotplug de Teclados:** Detección automática de hardware sin reiniciar.
-
----
-
-## 🛠️ Requisitos
-
-*   **Arch Linux** (funciona tanto en instalación limpia como sobre una ya existente; el instalador crea backups con fecha antes de reemplazar configuraciones locales).
-*   **Opencode:** Motor de IA CLI para las respuestas. El instalador ofrece instalarlo si no lo encuentra.
-*   **Waybar >= 0.16:** Necesario para que los clicks en los workspaces funcionen con Hyprland 0.57 en modo Lua. El instalador avisa y ofrece instalar la versión de `extra-testing` si solo hay 0.15.
-*   **Hardware de Audio:** Micrófono funcional.
-*   **Internet:** Para la descarga de modelos de IA (Whisper) y paquetes.
-*   **Proveedor de modelos Token:** Necesario para descargar los modelos de transcripción (gratuito en [proveedor.co](https://proveedor.co/settings/tokens)).
-
----
-
-## 🚀 Instalación Rápida
+## Instalación rápida
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/CarlosEmerito/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-
-# 2. Dar permisos y ejecutar el instalador
-chmod +x install.sh
-./install.sh
+./install.sh --dry-run     # ver qué haría, sin tocar nada
+./install.sh               # menú interactivo
 ```
 
-El instalador te guiará a través de:
-1.  Instalación de paquetes oficiales y AUR (`yay`).
-2.  Configuración de enlaces simbólicos para `.config`.
-3.  Elección del gestor de inicio (SDDM, Auto-login o Manual).
-4.  Configuración de **Proyecto** (te pedirá tu token de Proveedor de modelos).
+Para una instalación completa sin preguntas:
 
----
+```bash
+./install.sh --only all --yes --gpu nvidia
+```
 
-## ⌨️ Atajos de Teclado (Keybinds)
+Después, cierra sesión y vuelve a entrar para que Hyprland cargue la
+configuración nueva.
+
+## Opciones del instalador
+
+| Opción | Qué hace |
+| :--- | :--- |
+| `--dry-run`, `-n` | Enseña las acciones sin cambiar nada |
+| `--yes`, `-y` | No pregunta (valores por defecto) |
+| `--only config,packages,services,all` | Elige secciones |
+| `--no-packages` / `--no-services` / `--no-config` | Salta una sección |
+| `--enable-services` | Habilita los servicios systemd de usuario |
+| `--force` | Reemplaza también los archivos que se copian |
+| `--gpu intel\|nvidia\|amd\|none` | Ajusta las variables de GPU |
+| `--upgrade` | Actualiza el sistema antes de instalar paquetes |
+
+## Cómo coloca los archivos
+
+- **Enlaces** para lo que editas tú (Hyprland, Waybar, Kitty, Rofi, Zsh…).
+  Así, un cambio en tu escritorio ya queda en el repositorio.
+- **Copias** para lo que las aplicaciones reescriben (ajustes GTK,
+  `nwg-displays`). Se copian solo si faltan; con `--force` se reemplazan.
+- **Ejemplo de monitores**: `monitors.lua` no se versiona porque depende del
+  hardware. El instalador crea uno de ejemplo si no existe; genera el tuyo con
+  `nwg-displays`.
+
+Las copias de seguridad se guardan en `~/.dotfiles-backups/AAAAMMDD-HHMMSS/`.
+
+## Estructura
+
+```
+dotfiles/
+├── install.sh          Instalador
+├── home/               Copia de la carpeta personal
+│   ├── .zshrc  .zprofile  .bashrc  .bash_profile
+│   └── .config/        Hyprland, Waybar, Kitty, Rofi, servicios…
+├── bin/                Scripts propios para ~/.local/bin
+└── docs/               Guías
+```
+
+## Atajos principales
 
 | Tecla | Acción |
 | :--- | :--- |
-| `Super + Alt + Z` (Mantener) | **Hablar con Proyecto** |
-| `Super + Alt + X` | **Entrada de texto** (Proyecto) |
-| `Super + Alt + C` | **Nueva sesión** (Proyecto) |
-| `Super + Alt + S` | **Modo Visión** (captura + consulta) |
-| `Super + Q` / `Enter` | Abrir Terminal (Kitty) |
-| `Super + Space` | Lanzador de Apps (Rofi) |
-| `Super + E` | Explorador de Archivos (Nautilus) |
-| `Super + F` | Navegador (Google Chrome) |
-| `Super + N` | Centro de Notificaciones |
-| `Super + C` | Cerrar Ventana |
-| `Print` | Captura de Pantalla |
-| `Super + Shift + S` | Captura de Área (Portapapeles) |
+| `Super + Q` / `Super + Enter` | Terminal (Kitty) |
+| `Super + Space` | Lanzador de aplicaciones (Rofi) |
+| `Super + E` | Explorador de archivos (Nautilus) |
+| `Super + F` | Navegador (Chrome) |
+| `Super + C` / `Alt + F4` | Cerrar ventana |
+| `Super + N` | Centro de notificaciones |
+| `Super + M` | Apagar / cerrar sesión |
+| `Super + 1…0` | Cambiar de workspace |
+| `Super + Shift + 1…0` | Mover ventana a otro workspace |
+| `Super + flechas` | Cambiar el foco |
+| `Super + S` | Mostrar/ocultar el scratchpad |
+| `Super + V` | Historial del portapapeles |
+| `Print` | Captura de pantalla completa |
+| `Super + Print` | Captura de un área |
+| `Super + Shift + S` | Captura y editar con Swappy |
+| `Super + F5` | Emergencia: restaurar solo la pantalla del portátil |
 
----
+## Notas
 
-## 📁 Estructura del Proyecto
+- **Monitores:** edita `~/.config/hypr/monitors.lua` o usa `nwg-displays`.
+  Ese archivo es local y no se sube al repositorio.
+- **GPU:** `envvariables.lua` trae los bloques de Intel, NVIDIA y AMD. El
+  instalador activa solo el que elijas.
+- **Secretos:** nunca se guardan aquí. Si necesitas tokens, usa archivos
+  locales como `~/.config/qomu/mcp.env` (ignorados por git).
+- **Servicios con proyectos externos:** algunas unidades (`mydot`,
+  `history_bot`, `hermes-gateway`) esperan proyectos en `~/Proyectos/myDot`,
+  `~/faceless_history_bot` y `~/.hermes`. Si no existen, el servicio fallará;
+  el instalador no los habilita por defecto.
+- **Actualizar:** `cd ~/dotfiles && git pull`. Los enlaces hacen el resto.
 
-*   `config/`: Configuraciones de Hyprland, Waybar, Kitty, Rofi, Starship, etc.
-*   `modules/ai/`: Núcleo del asistente Proyecto (Python + Systemd). Incluye `input_ui.py` (entrada de texto con `prompt_toolkit`).
-*   `core/scripts/`: Scripts auxiliares (focus listener, capturas, etc.).
-*   `core/services/`: Servicios systemd (asistente.service).
-*   `install.sh`: El cerebro de la instalación.
+## Documentación
 
----
-
-## ⚠️ Notas Importantes
-
-*   **Instalador y backups:** si ya existe `~/.config/hypr`, `~/.config/waybar`, `~/.zshrc`, etc., el instalador pregunta antes de reemplazar y crea copias `.bak.AAAA-MM-DD-HHMMSS`. Responder `n` conserva la configuración local. No borra directorios sin confirmación.
-*   **GPU:** El repo trae activadas las variables de NVIDIA (`LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `NVD_BACKEND=direct`). El instalador pregunta por tu GPU y descomenta solo el bloque correspondiente (Intel, NVIDIA o AMD) en `config/hypr/envvariables.lua`. Después de cambiar de GPU, reinicia la sesión para que las apps nuevas hereden las variables.
-*   **Hyprland:** la configuración usa Lua (`config/hypr/*.lua`) desde Hyprland 0.55+ (probado con 0.57). Los antiguos `.conf` están en `config/hypr/legacy/` solo como referencia y **ya no se cargan**.
-*   **nwg-displays:** guarda `monitors.lua` y `workspaces.lua` (además de los `.conf` de compatibilidad). Hyprland carga los `.lua`; editar los `.conf` no aplica cambios. `workspaces.lua` se carga con `require("workspaces")`.
-*   **Monitores:** `config/hypr/monitors.lua` está generado para los puertos `eDP-1` y `HDMI-A-1` de este equipo. En otro hardware, abre `nwg-displays` y aplica la disposición para regenerarlo.
-*   **Waybar:** con Hyprland 0.57 (Lua) se necesita **Waybar >= 0.16**. Waybar 0.15.x sigue enviando `dispatch workspace N` por IPC y los clicks en los workspaces no hacen nada; Waybar 0.16 traduce esos dispatchers a `hl.dsp.*`.
-*   **Modo Visión:** Requiere `grim` y `slurp` para captura de pantalla. La imagen se pasa al agente Opencode para su análisis.
-*   **Entrada de Texto:** Usa `prompt_toolkit` con atajos: `Ctrl+H` borra palabra completa, `Escape` cierra sin guardar.
-*   **Starship:** El prompt es minimalista (`~ ❯`). La configuración está en `config/starship/starship.toml`. El instalador crea symlinks tanto en `~/.config/starship.toml` como en `~/.config/starship/` para cubrir ambos paths de búsqueda.
-*   **IA:** La primera vez que uses la voz, Proyecto descargará el modelo de Whisper (~75MB).
-*   **Dependencias IA:** El instalador incluye `pyudev` para la detección hotplug de teclados. Si el servicio `asistente.service` falla, verifica que todas las dependencias de `modules/ai/requirements.txt` estén instaladas (`pip install -r modules/ai/requirements.txt`).
-*   **Seguridad:** El token de Proveedor de modelos se guarda en `~/.config/asistente/.env` con permisos `600` y no debe compartirse. `~/.config/pulse` es estado local y no se enlaza al repo.
-
----
-
-## 🤝 Contribuciones
-
-Si tienes ideas para mejorar la integración de la IA o los dotfiles, ¡los Pull Requests son bienvenidos!
-
----
-
-**Desarrollado con ❤️ por Emerito.**
+- [Guía de instalación detallada](docs/INSTALAR.md)

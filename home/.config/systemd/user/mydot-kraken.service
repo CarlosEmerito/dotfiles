@@ -1,0 +1,9 @@
+[Unit]
+Description=myDot — foto diaria de Kraken y alertas de precio
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Proyectos/myDot
+Environment=MYDOT_DATA_DIR=%h/Proyectos/myDot/data
+ExecStart=%h/Proyectos/myDot/.venv/bin/python %h/Proyectos/myDot/mydot.py kraken-tick

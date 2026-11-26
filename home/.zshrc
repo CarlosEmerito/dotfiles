@@ -34,11 +34,6 @@ export PATH="$HOME/.opencode/bin:$HOME/bin:$HOME/.local/bin:$HOME/.npm-global/bi
 
 # --- Environment Variables ---
 export EDITOR='nano'
-# El TOKEN se gestiona via ~/.config/asistente/.env
-if [[ -f "$HOME/.config/asistente/.env" ]]; then
-    source "$HOME/.config/asistente/.env"
-    export TOKEN
-fi
 
 # --- Modern CLI Tools ---
 if command -v fastfetch >/dev/null 2>&1; then
@@ -61,8 +56,5 @@ bindkey '^H' backward-kill-word          # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word   # Ctrl+Backspace (kitty/modern terminals)
 bindkey '^[[3;5~' kill-word              # Ctrl+Delete
 
-# Vercel MCP (vercel-mcp-pro)
-# Desactivado para configurar la cuenta personal (correo@ejemplo.com).
-# El MCP de Vercel ahora usa OAuth (https://mcp.vercel.com); este token era de la cuenta GoTogether.
-# Reactivar solo si se vuelve a usar la cuenta GoTogether.
-# export VERCEL_TOKEN="..."
+# Qomu MCP token
+[ -f "$HOME/.config/qomu/mcp.env" ] && source "$HOME/.config/qomu/mcp.env"

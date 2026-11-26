@@ -1,0 +1,73 @@
+#!/bin/sh
+# Informe rápido de las últimas caídas de Hyprland.
+# Ejecútalo después de que la sesión se haya reiniciado sola.
+#
+# Se apoya en tres fuentes:
+#   1. ~/.local/state/hyprland-exit.log  -> arranques/paradas del lanzador
+#   2. tracefs (signal:signal_generate)  -> QUIÉN manda el SIGKILL a Hyprland
+#   3. auditd (reglas hyprkill9/15)      -> kill()/tgkill()/... desde espacio de usuario
+# Además muestra la cola de las últimas instancias de Hyprland (/run/.../hyprland.log).
+
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/hyprland-exit.log"
+TRACE=/sys/kernel/tracing/trace
+[ -e "$TRACE" ] || TRACE=/sys/kernel/debug/tracing/trace
+HYPR_RUN="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr"
+
+echo "== Scheduling de Hyprland (RT / RLIMIT_RTTIME) =="
+HPID=$(pgrep -x Hyprland | head -n 1)
+if [ -n "$HPID" ]; then
+    ps -o pid,tid,class,rtprio,comm -p "$HPID"
+    grep -E "Max realtime timeout|Max cpu time" "/proc/$HPID/limits" 2>/dev/null
+    echo "(solo si CLS=RR/FIFO aplica RLIMIT_RTTIME; con CLS=TS no puede dispararse)"
+else
+    echo "(Hyprland no está corriendo)"
+fi
+
+echo
+echo "== Historial de arranque/parada de Hyprland =="
+if [ -f "$LOG" ]; then
+    grep -a -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+-]+  (arranca|start-hyprland terminó|Hyprland terminó)" "$LOG" | tail -n 30
+else
+    echo "(todavía no hay datos; hace falta que Hyprland arranque y termine al menos una vez)"
+fi
+
+echo
+echo "== Salida del lanzador/watchdog (cierres anómalos y reinicios) =="
+OUT="${XDG_STATE_HOME:-$HOME/.local/state}/hyprland-start.log"
+if [ -f "$OUT" ]; then
+    grep -a -E "exit not-cleanly|exit cleanly|restarting|watchdog|Failed" "$OUT" | tail -n 20
+    echo "--- últimas líneas ---"
+    tail -n 5 "$OUT"
+else
+    echo "(sin salida del lanzador todavía)"
+fi
+
+echo
+echo "== SIGKILL entregado a Hyprland (tracepoint del kernel) =="
+echo "   Prefijo TASK-PID = quién envía | comm/pid = quién lo recibe | code=SIGINFO"
+echo "   code=0 SI_USER, -6 SI_TKILL, 128 SI_KERNEL (kernel/cgroup)"
+if sudo -n cat "$TRACE" 2>/dev/null | grep -q "signal_generate"; then
+    sudo -n cat "$TRACE" 2>/dev/null | grep "signal_generate" | tail -n 40
+else
+    echo "(sin eventos registrados todavía)"
+fi
+
+echo
+echo "== SIGKILL (9) / SIGTERM (15) vistos por auditd =="
+echo "   (solo envíos desde espacio de usuario; el kernel/cgroup no aparece aquí)"
+sudo ausearch -k hyprkill9 -i -ts today 2>/dev/null | grep "key=hyprkill" | tail -n 20
+sudo ausearch -k hyprkill15 -i -ts today 2>/dev/null | grep "key=hyprkill" | tail -n 20
+
+echo
+echo "== Cola de las últimas instancias de Hyprland =="
+i=0
+for f in $(ls -t "$HYPR_RUN"/*/hyprland.log 2>/dev/null | head -n 3); do
+    i=$((i + 1))
+    echo "--- [$i] $f"
+    grep -E "^ERR|^WARN|CRITICAL|signal|killed" "$f" 2>/dev/null | tail -n 15
+done
+[ "$i" -eq 0 ] && echo "(no hay logs de Hyprland)"
+
+echo
+echo "== Kernel: OOM / GPU =="
+sudo -n dmesg -T 2>/dev/null | grep -iE "out of memory|killed process|GPU HANG|Xid|NVRM.*error" | tail -n 20

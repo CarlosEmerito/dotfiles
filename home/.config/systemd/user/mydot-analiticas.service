@@ -1,0 +1,8 @@
+[Unit]
+Description=myDot — leer las analíticas de las webs y guardar el día
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Proyectos/myDot
+ExecStart=%h/Proyectos/myDot/.venv/bin/python %h/Proyectos/myDot/mydot.py analiticas --dias 30

@@ -8,14 +8,7 @@
 
     "modules-left": ["hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["custom/asistente", "pulseaudio", "backlight", "network", "temperature", "cpu", "battery", "tray"],
-
-    "custom/asistente": {
-        "exec": "cat /tmp/asistente_status 2>/dev/null",
-        "interval": 1,
-        "return-type": "json",
-        "format": "{}"
-    },
+    "modules-right": ["pulseaudio", "backlight", "network", "temperature", "cpu", "battery", "tray"],
 
     "clock": {
         "format": " {:%H:%M}",

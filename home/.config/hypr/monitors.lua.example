@@ -1,0 +1,23 @@
+-- Ejemplo de configuración de monitores.
+--
+-- El instalador copia este archivo a ~/.config/hypr/monitors.lua SOLO si ese
+-- archivo no existe todavía. Tu configuración real se queda fuera de git
+-- porque depende del hardware de cada equipo.
+--
+-- Genera la tuya con `nwg-displays` (pestaña Displays -> Apply) o edítala a
+-- mano. Documentación: https://wiki.hypr.land/Configuring/Monitors/
+
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "preferred",
+    position = "auto",
+    scale    = 1,
+})
+
+-- Ejemplo de un segundo monitor a la derecha:
+-- hl.monitor({
+--     output   = "HDMI-A-1",
+--     mode     = "preferred",
+--     position = "auto-right",
+--     scale    = 1,
+-- })

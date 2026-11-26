@@ -1,0 +1,8 @@
+# Plantilla de ~/.gitconfig.
+# Cópiala a ~/.gitconfig y pon tus datos. El archivo real NO se versiona.
+[user]
+	name = Tu Nombre
+	email = tu-correo@ejemplo.com
+
+[credential]
+	helper = store

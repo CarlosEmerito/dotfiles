@@ -1,6 +1,5 @@
 -- EmeDotEme — Configuración de Hyprland (Lua)
--- Migrada desde hyprland.conf para Hyprland 0.57+
--- Los .conf originales están en legacy/ y ya no se cargan.
+-- Configuración para Hyprland 0.57+ (formato Lua).
 
 require("envvariables")
 require("monitors")
@@ -131,27 +130,6 @@ hl.gesture({
 ----------------------------
 ---- VENTANAS Y REGLAS ----
 ----------------------------
-
--- Proyecto Window Rules
-hl.window_rule({
-    name  = "asistente-input-main",
-    match = { class = "^(asistente_input)$" },
-
-    float  = true,
-    size   = "600 400",
-    center = true,
-})
-
--- Rules for Proyecto AI Agent
-hl.window_rule({
-    name  = "asistente-popup",
-    match = { class = "asistente_popup" },
-
-    float     = true,
-    size      = "70% 50%",
-    center    = true,
-    animation = "slide",
-})
 
 hl.window_rule({
     -- Ignore maximize requests from all apps. You'll probably like this.

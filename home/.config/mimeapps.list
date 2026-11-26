@@ -1,0 +1,23 @@
+[Default Applications]
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
+application/schema+json=code.desktop
+x-scheme-handler/antigravity=antigravity.desktop
+text/markdown=code.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/curseforge=curseforge.desktop
+image/webp=org.kde.gwenview.desktop
+image/png=org.kde.gwenview.desktop
+x-scheme-handler/mailto=google-chrome.desktop
+x-scheme-handler/codex=chatgpt.desktop
+
+[Added Associations]
+application/schema+json=code.desktop;
+text/markdown=code.desktop;
+x-scheme-handler/curseforge=curseforge.desktop;
+image/webp=swappy.desktop;org.kde.gwenview.desktop;
+image/png=org.kde.gwenview.desktop;
+application/x-zerosize=code.desktop;

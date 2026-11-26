@@ -1,0 +1,29 @@
+[Unit]
+Description=Cronos del Pasado: generar y enviar un Short histórico
+Documentation=https://github.com/ollama/ollama
+Wants=network-online.target
+After=network-online.target ollama.service
+
+[Service]
+Type=oneshot
+# Los servicios de usuario no pueden cambiar el grupo primario; el usuario
+# ya pertenece al grupo audio y conserva sus grupos suplementarios.
+WorkingDirectory=%h/faceless_history_bot
+EnvironmentFile=-%h/faceless_history_bot/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=%h/faceless_history_bot/venv/bin/python %h/faceless_history_bot/scripts/cleanup.py --days 10 --temp-days 2
+ExecStart=%h/faceless_history_bot/scripts/run_locked.sh
+TimeoutStartSec=2h
+Nice=10
+IOSchedulingClass=idle
+# Tope de CPU para que el trabajo no active el turbo de todos los nucleos a la
+# vez, que es lo que lleva el paquete a 100 C en un i7-10875H. Ollama y Whisper
+# corren en la RTX 2060, asi que el limite afecta sobre todo al render.
+# El render sigue funcionando: usa 2,4 nucleos con NVENC.
+CPUQuota=400%
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

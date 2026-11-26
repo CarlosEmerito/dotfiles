@@ -1,655 +1,651 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # ==============================================================================
-# Arch Linux Hyprland & Proyecto Installer (Refactored)
+# Dotfiles para Arch Linux + Hyprland
+#
+# Uso:
+#   ./install.sh                     Menú interactivo
+#   ./install.sh --only config       Solo configuración
+#   ./install.sh --only all --yes    Todo sin preguntar (modo desatendido)
+#   ./install.sh --dry-run           Enseña qué haría, sin tocar nada
+#   ./install.sh --help              Ayuda completa
 # ==============================================================================
 
-# Si alguien lo ejecuta con sh/dash, relanzar con bash (usamos arrays).
-if [ -z "${BASH_VERSION:-}" ]; then
-    exec bash "$0" "$@"
-fi
+set -u
 
-# --- Colores y Estética ---
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-# --- Funciones de Utilidad ---
-info() { echo -e "${BLUE}${BOLD}󰋼 INFO${NC} $1"; }
-success() { echo -e "${GREEN}${BOLD}󰄬 OK${NC} $1"; }
-warn() { echo -e "${YELLOW}${BOLD}󱈸 WARN${NC} $1"; }
-error() { echo -e "${RED}${BOLD}󰅚 ERROR${NC} $1"; }
-
-show_progress() {
-    local pid=$1
-    local task=$2
-    local spin='-\|/'
-    local i=0
-    local cyan=$(tput setaf 6 2>/dev/null || true)
-    local purple=$(tput setaf 5 2>/dev/null || true)
-    local bold=$(tput bold 2>/dev/null || true)
-    local reset=$(tput sgr0 2>/dev/null || true)
-
-    printf "${cyan}${bold}󱑮 %-25s [${reset}" "$task"
-    while kill -0 $pid 2>/dev/null; do
-        i=$(( (i+1) % 4 ))
-        printf "${purple}${spin:$i:1}${reset}\b"
-        sleep 0.1
-    done
-    wait $pid
-    if [[ $? -eq 0 ]]; then
-        printf "${purple}████████████████████████████████████████${reset}${cyan}${bold}] 100%%${reset}\n"
-    else
-        printf "${RED}████████████████████████████████████████${reset}${RED}${bold}] ERROR${reset}\n"
-        return 1
-    fi
-}
-
-print_banner() {
-    clear 2>/dev/null || true
-    echo -e "${PURPLE}${BOLD}"
-    echo "  ███████╗███╗   ███╗███████╗██████╗  ██████╗ ████████╗███████╗███╗   ███╗███████╗"
-    echo "  ██╔════╝████╗ ████║██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝████╗ ████║██╔════╝"
-    echo "  █████╗  ██╔████╔██║█████╗  ██║  ██║██║   ██║   ██║   █████╗  ██╔████╔██║█████╗  "
-    echo "  ██╔══╝  ██║╚██╔╝██║██╔══╝  ██║  ██║██║   ██║   ██║   ██╔══╝  ██║╚██╔╝██║██╔══╝  "
-    echo "  ███████╗██║ ╚═╝ ██║███████╗██████╔╝╚██████╔╝   ██║   ███████╗██║ ╚═╝ ██║███████╗"
-    echo "  ╚══════╝╚═╝     ╚═╝╚══════╝╚═════╝  ╚═════╝    ╚═╝   ╚══════╝╚═╝     ╚═╝╚══════╝"
-    echo -e "                               EmeDotEme Setup${NC}"
-    echo ""
-}
-
-if [[ $EUID -eq 0 ]]; then
-    error "Este script NO debe ejecutarse como root. Usa un usuario normal con permisos sudo."
-    exit 1
-fi
-
-if ! command -v sudo >/dev/null 2>&1; then
-    error "sudo no está instalado. Instálalo como root (pacman -S sudo) y añade tu usuario a wheel."
-    exit 1
-fi
-
-# Pedir la contraseña una sola vez: los pacman/yay van en segundo plano con
-# un spinner y no pueden mostrar el prompt de sudo de forma fiable.
-sudo -v || { error "Se necesitan permisos sudo para instalar paquetes."; exit 1; }
-
+REPO_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+SRC_HOME="$REPO_DIR/home"
+SRC_BIN="$REPO_DIR/bin"
 TARGET_USER="${USER:-$(id -un)}"
 
-# Detectar directorio real del repositorio
-REAL_SCRIPT_PATH=$(readlink -f "${BASH_SOURCE[0]}")
-SCRIPT_DIR=$(dirname "$REAL_SCRIPT_PATH")
-DOTFILES_DIR="$SCRIPT_DIR"
+# --- Opciones ----------------------------------------------------------------
+DRY_RUN=0
+ASSUME_YES=0
+FORCE_COPY=0
+ENABLE_SERVICES=0
+UPGRADE_SYSTEM=0
+GPU_MODE=""
+DO_CONFIG=0
+DO_PACKAGES=0
+DO_SERVICES=0
+SECTIONS_SET=0
+INTERACTIVE=0
+[[ -t 0 && -t 1 ]] && INTERACTIVE=1
 
-print_banner
-info "Iniciando instalación desde: ${BOLD}$DOTFILES_DIR${NC}"
-echo ""
-
-# ------------------------------------------------------------------
-# Gestión de pacman
-# ------------------------------------------------------------------
-info "Actualizando base de datos de paquetes..."
-# Refrescar el llavero primero evita fallos de firmas en ISOs antiguas.
-sudo pacman -Sy --needed --noconfirm archlinux-keyring > /dev/null 2>&1 || true
-sudo pacman -Syu --noconfirm > /dev/null 2>&1 || warn "Falló la actualización (puede continuar)"
-
-# ------------------------------------------------------------------
-# Instalación de yay (si no existe)
-# ------------------------------------------------------------------
-if ! command -v yay &> /dev/null; then
-    warn "yay no encontrado. Instalando ayudante AUR..."
-    sudo pacman -S --needed --noconfirm git base-devel > /dev/null || {
-        error "No se pudo instalar git/base-devel"
-        exit 1
-    }
-    rm -rf /tmp/yay-install
-    git clone https://aur.archlinux.org/yay.git /tmp/yay-install
-    (cd /tmp/yay-install && makepkg -si --noconfirm) || {
-        error "Falló la instalación de yay"
-        exit 1
-    }
-    rm -rf /tmp/yay-install
-    success "yay instalado correctamente."
+# --- Colores ----------------------------------------------------------------
+if [[ -t 1 ]]; then
+    RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; YELLOW=$'\033[1;33m'
+    BLUE=$'\033[0;34m'; PURPLE=$'\033[0;35m'; BOLD=$'\033[1m'; NC=$'\033[0m'
+else
+    RED=''; GREEN=''; YELLOW=''; BLUE=''; PURPLE=''; BOLD=''; NC=''
 fi
 
-# ------------------------------------------------------------------
-# Menú principal
-# ------------------------------------------------------------------
-echo ""
-echo -e "${CYAN}${BOLD}¿Qué deseas instalar de la suite EmeDotEme?${NC}"
-echo -e "1) ${BOLD}Full Experience${NC} (Hyprland, Apps, Dotfiles, AI)"
-echo -e "2) ${BOLD}Solo AI Assistant${NC} (Proyecto)"
-echo -e "3) ${BOLD}Solo Dotfiles${NC} (Configuraciones base)"
-read -p "Selecciona una opción [1-3]: " main_choice
+info()  { printf '%s\n' "${BLUE}${BOLD}INFO${NC}  $*"; }
+ok()    { printf '%s\n' "${GREEN}${BOLD}OK${NC}    $*"; }
+warn()  { printf '%s\n' "${YELLOW}${BOLD}AVISO${NC} $*"; }
+err()   { printf '%s\n' "${RED}${BOLD}ERROR${NC} $*" >&2; }
 
-case $main_choice in
-    1|3)
-        # ------------------------------------------------------------------
-        # Paquetes Pacman
-        # ------------------------------------------------------------------
-        info "Instalando paquetes esenciales..."
-        sudo pacman -S --needed --noconfirm \
-            zsh zsh-autosuggestions zsh-syntax-highlighting \
-            starship eza bat \
-            cliphist wl-clipboard swappy swaybg \
-            hyprland hyprshutdown hyprcursor hyprlang hyprutils hyprgraphics hyprwayland-scanner \
-            waybar rofi kitty nautilus grim slurp brightnessctl playerctl \
-            swaync libnotify otf-font-awesome nwg-displays \
-            pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
-            papirus-icon-theme ttf-jetbrains-mono-nerd inotify-tools \
-            socat jq python portaudio ffmpeg libmm-glib \
-            git curl base-devel \
-            power-profiles-daemon networkmanager network-manager-applet bluez bluez-utils blueman \
-            xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome fastfetch > /dev/null 2>&1 &
-        show_progress $! "Instalando desde Pacman" || warn "Algunos paquetes Pacman fallaron"
+usage() {
+    cat <<'EOF'
+Dotfiles para Arch Linux + Hyprland
 
-        # ------------------------------------------------------------------
-        # Paquetes AUR
-        # ------------------------------------------------------------------
-        sudo -v || true
-        info "Instalando desde AUR..."
-        yay -S --needed --noconfirm --answerclean None --answerdiff None --answeredit None \
-            google-chrome catppuccin-gtk-theme-mocha > /dev/null 2>&1 &
-        show_progress $! "Compilando desde AUR" || warn "Algunos paquetes AUR fallaron"
+Uso: ./install.sh [opciones]
 
-        # ------------------------------------------------------------------
-        # Waybar >= 0.16 para Hyprland 0.57 (IPC en Lua)
-        # ------------------------------------------------------------------
-        ensure_waybar_lua() {
-            command -v waybar >/dev/null 2>&1 || return 0
-            local ver pkg_file pkg_url
-            ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-            [[ -n "$ver" ]] || return 0
-            [[ "$(printf '%s\n' 0.16.0 "$ver" | sort -V | head -1)" == "0.16.0" ]] && return 0
+Secciones (si no indicas ninguna, se muestra un menú):
+  --only LISTA        config,packages,services,all  (ej: --only config,services)
+  --no-config         No tocar la configuración
+  --no-packages       No instalar paquetes
+  --no-services       No instalar servicios de usuario
+  --enable-services   Habilitar los servicios systemd --user instalados
 
-            warn "Waybar $ver no soporta los dispatchers Lua de Hyprland 0.57: los clicks en workspaces no funcionan."
-            read -p "¿Instalar Waybar >= 0.16 desde extra-testing? (S/n): " waybar_testing
-            case "${waybar_testing:-S}" in
-                [nN])
-                    warn "Se mantiene Waybar $ver. Actualiza manualmente a >= 0.16."
-                    return 0
-                    ;;
-            esac
+Comportamiento:
+  -n, --dry-run       Enseñar qué haría sin cambiar nada
+  -y, --yes           No preguntar (usa los valores por defecto)
+  --force             Reemplazar también los archivos copiados (GTK, nwg-displays)
+  --gpu intel|nvidia|amd|none
+                      Ajustar las variables de GPU de Hyprland
+  --upgrade           Actualizar todo el sistema antes de instalar paquetes
+  -h, --help          Mostrar esta ayuda
 
-            # Si 0.16 ya está en el repo estable, esto lo actualiza.
-            sudo pacman -S --needed --noconfirm waybar >/dev/null 2>&1 || true
-            ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-            if [[ -n "$ver" ]] && [[ "$(printf '%s\n' 0.16.0 "$ver" | sort -V | head -1)" == "0.16.0" ]]; then
-                success "Waybar $ver instalado."
-                return 0
-            fi
+Ejemplos:
+  ./install.sh --dry-run
+  ./install.sh --only config
+  ./install.sh --only all --yes --gpu nvidia
+EOF
+}
 
-            # Fallback: paquete actual de extra-testing.
-            if command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-                pkg_file=$(curl -fsSL "https://archlinux.org/packages/extra-testing/x86_64/waybar/json/" 2>/dev/null | jq -r '.filename // empty')
-                if [[ -n "$pkg_file" ]]; then
-                    pkg_url="https://geo.mirror.pkgbuild.com/extra-testing/os/x86_64/$pkg_file"
-                    if curl -fsSL "$pkg_url" -o "/tmp/$pkg_file" && sudo pacman -U --noconfirm "/tmp/$pkg_file" >/dev/null 2>&1; then
-                        ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-                        success "Waybar $ver instalado desde extra-testing."
-                        return 0
-                    fi
-                fi
-            fi
+need_arg() { [[ $# -ge 2 ]] || { err "Falta el valor de $1"; exit 2; }; }
 
-            warn "No se pudo instalar Waybar >= 0.16. Instala waybar-git o habilita extra-testing manualmente."
-        }
-        ensure_waybar_lua
-
-        # ------------------------------------------------------------------
-        # Habilitar servicios del sistema
-        # ------------------------------------------------------------------
-        info "Habilitando servicios del sistema..."
-        sudo systemctl enable --now NetworkManager 2>/dev/null || warn "Falló NetworkManager"
-        sudo systemctl enable --now bluetooth 2>/dev/null || warn "Falló bluetooth"
-        sudo systemctl enable --now power-profiles-daemon 2>/dev/null || warn "Falló power-profiles-daemon"
-
-        # ------------------------------------------------------------------
-        # Selección de GPU
-        # ------------------------------------------------------------------
-        set_gpu_env() {
-            local gpu="$1"
-            local file="$DOTFILES_DIR/config/hypr/envvariables.lua"
-            local name
-
-            # Comenta cualquier variable de GPU que estuviera activa.
-            for name in LIBVA_DRIVER_NAME MESA_LOADER_DRIVER_NAME __GLX_VENDOR_LIBRARY_NAME NVD_BACKEND; do
-                sed -i -E "s|^([[:space:]]*)hl\.env\(\"$name\"|\1-- hl.env(\"$name\"|" "$file"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -n|--dry-run)       DRY_RUN=1 ;;
+        -y|--yes)           ASSUME_YES=1 ;;
+        --force)            FORCE_COPY=1 ;;
+        --enable-services)  ENABLE_SERVICES=1 ;;
+        --upgrade)          UPGRADE_SYSTEM=1 ;;
+        --gpu)              need_arg "$@"; GPU_MODE="$2"; shift ;;
+        --only)
+            need_arg "$@"
+            SECTIONS_SET=1
+            IFS=', ' read -r -a _sections <<< "$2"
+            for s in "${_sections[@]}"; do
+                [[ -z "$s" ]] && continue
+                case "$s" in
+                    config)   DO_CONFIG=1 ;;
+                    packages) DO_PACKAGES=1 ;;
+                    services) DO_SERVICES=1 ;;
+                    all)      DO_CONFIG=1; DO_PACKAGES=1; DO_SERVICES=1 ;;
+                    *) err "Sección desconocida: $s"; exit 2 ;;
+                esac
             done
+            shift ;;
+        --no-config)   DO_CONFIG=0; SECTIONS_SET=1 ;;
+        --no-packages) DO_PACKAGES=0; SECTIONS_SET=1 ;;
+        --no-services) DO_SERVICES=0; SECTIONS_SET=1 ;;
+        -h|--help) usage; exit 0 ;;
+        *) err "Opción desconocida: $1 (usa --help)"; exit 2 ;;
+    esac
+    shift
+done
 
-            # Descomenta únicamente el bloque de la GPU elegida.
-            case "$gpu" in
-                intel)
-                    sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "iHD"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("MESA_LOADER_DRIVER_NAME", "iris"\))|\1\2|' "$file"
-                    ;;
-                nvidia)
-                    sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "nvidia"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("__GLX_VENDOR_LIBRARY_NAME", "nvidia"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("NVD_BACKEND", "direct"\))|\1\2|' "$file"
-                    ;;
-                amd)
-                    sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "radeonsi"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("MESA_LOADER_DRIVER_NAME", "radeonsi"\))|\1\2|' "$file"
-                    ;;
-            esac
-        }
-
-        echo ""
-        echo -e "${CYAN}${BOLD}¿Qué GPU tienes?${NC}"
-        echo -e "1) ${BOLD}Intel${NC}"
-        echo -e "2) ${BOLD}NVIDIA${NC}"
-        echo -e "3) ${BOLD}AMD${NC}"
-        read -p "Selecciona una opción [1-3]: " gpu_choice
-        case $gpu_choice in
-            1)
-                info "Configurando envvariables para Intel..."
-                set_gpu_env intel
-                ;;
-            2)
-                info "Configurando envvariables para NVIDIA..."
-                set_gpu_env nvidia
-                ;;
-            3)
-                info "Configurando envvariables para AMD..."
-                set_gpu_env amd
-                ;;
-            *)
-                warn "Opción inválida; se deja la configuración de GPU actual."
-                ;;
-        esac
-
-        # ------------------------------------------------------------------
-        # Enlaces simbólicos de configuración
-        # ------------------------------------------------------------------
-        info "Configurando enlaces simbólicos..."
-        mkdir -p ~/.config
-
-        # Limpiar symlinks rotos de configuraciones que ya no existan en el repo.
-        # pulse se trata aparte porque puede ser un symlink roto tras actualizar
-        # el repo (el cookie ya no vive en git).
-        for existing in "$HOME/.config/"*; do
-            if [[ -L "$existing" ]] && [[ ! -e "$existing" ]] && [[ "$(basename "$existing")" != "pulse" ]]; then
-                rm -f "$existing"
-                info "Limpiando symlink roto: $(basename "$existing")"
-            fi
-        done
-
-        # ~/.config/pulse es estado local de PulseAudio: nunca debe apuntar al repo.
-        # Si venía enlazado de una instalación anterior, se migra conservando el cookie
-        # (o se crea un directorio local vacío si el symlink ya estaba roto).
-        if [[ -L "$HOME/.config/pulse" ]] && [[ "$(readlink "$HOME/.config/pulse")" == "$DOTFILES_DIR/config/pulse" ]]; then
-            info "Migrando ~/.config/pulse a un directorio local..."
-            pulse_tmp=$(mktemp -d)
-            if [[ -d "$HOME/.config/pulse/" ]]; then
-                cp -a "$HOME/.config/pulse/." "$pulse_tmp/" 2>/dev/null || true
-            fi
-            rm -f "$HOME/.config/pulse"
-            mv "$pulse_tmp" "$HOME/.config/pulse"
-            chmod 700 "$HOME/.config/pulse"
-            chmod 600 "$HOME/.config/pulse/cookie" 2>/dev/null || true
-        fi
-
-        # Solo se enlazan configuraciones que el repo gestiona de verdad.
-        # gtk-2.0/gtk-3.0 y pulse se dejan como estado local para no pisar
-        # configuraciones de apps ni credenciales del servidor de audio.
-        MANAGED_CONFIGS=(hypr kitty nwg-displays rofi starship swaync swappy waybar)
-        for dir_name in "${MANAGED_CONFIGS[@]}"; do
-            dir="$DOTFILES_DIR/config/$dir_name"
-            [[ -d "$dir" ]] || continue
-            target="$HOME/.config/$dir_name"
-            if [[ -d "$target" ]] && [[ ! -L "$target" ]]; then
-                warn "Config local detectada: $target"
-                read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " backup_choice
-                case "${backup_choice:-S}" in
-                    [nN])
-                        warn "Se conserva $target; no se enlaza $dir_name."
-                        continue
-                        ;;
-                    *)
-                        backup_path="${target}.bak.$(date +%Y%m%d-%H%M%S)"
-                        if cp -r "$target" "$backup_path"; then
-                            success "Backup creado: $backup_path"
-                        else
-                            error "No se pudo crear el backup; se conserva $target."
-                            continue
-                        fi
-                        ;;
-                esac
-                rm -rf "$target"
-            elif [[ -L "$target" ]]; then
-                if [[ "$(readlink -f "$target")" != "$dir" ]]; then
-                    warn "Symlink existente: $target -> $(readlink "$target")"
-                    read -p "¿Reemplazarlo por el del repo? (s/N): " symlink_choice
-                    case "${symlink_choice:-N}" in
-                        [sS]) ;;
-                        *)
-                            warn "Se conserva $target; no se enlaza $dir_name."
-                            continue
-                            ;;
-                    esac
-                fi
-                rm -f "$target"
-            fi
-            ln -sfn "$dir" "$target"
-            success ".config/$dir_name enlazado."
-        done
-
-        # Carpetas usadas por los atajos de captura de pantalla
-        mkdir -p "$HOME/Imágenes"
-
-        # Ajustes GTK: se copian (no se enlazan) porque las apps escriben ahí.
-        for gtk_file in "gtk-3.0/settings.ini" "gtk-2.0/.gtkrc-2.0"; do
-            gtk_src="$DOTFILES_DIR/config/$gtk_file"
-            gtk_dst="$HOME/.config/$gtk_file"
-            [[ -f "$gtk_src" ]] || continue
-            mkdir -p "$(dirname "$gtk_dst")"
-            if [[ -f "$gtk_dst" ]] && ! cmp -s "$gtk_src" "$gtk_dst"; then
-                if ! cp "$gtk_dst" "$gtk_dst.bak.$(date +%Y%m%d-%H%M%S)"; then
-                    warn "No se pudo crear backup de $gtk_dst; se conserva."
-                    continue
-                fi
-            fi
-            install -m 644 "$gtk_src" "$gtk_dst"
-        done
-
-        # Symlink directo de starship.toml (prioridad sobre starship/starship.toml)
-        STARSHIP_SRC="$DOTFILES_DIR/config/starship/starship.toml"
-        STARSHIP_DST="$HOME/.config/starship.toml"
-        if [[ -f "$STARSHIP_SRC" ]]; then
-            if [[ -f "$STARSHIP_DST" && ! -L "$STARSHIP_DST" ]]; then
-                warn "Config local detectada: $STARSHIP_DST"
-                read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " starship_backup
-                case "${starship_backup:-S}" in
-                    [nN])
-                        warn "Se conserva $STARSHIP_DST."
-                        ;;
-                    *)
-                        if cp "$STARSHIP_DST" "$STARSHIP_DST.bak.$(date +%Y%m%d-%H%M%S)"; then
-                            ln -sf "$STARSHIP_SRC" "$STARSHIP_DST"
-                        else
-                            warn "No se pudo crear backup; se conserva $STARSHIP_DST."
-                        fi
-                        ;;
-                esac
-            elif [[ -L "$STARSHIP_DST" ]] && [[ "$(readlink -f "$STARSHIP_DST")" != "$STARSHIP_SRC" ]]; then
-                warn "Symlink existente: $STARSHIP_DST -> $(readlink "$STARSHIP_DST")"
-                read -p "¿Reemplazarlo por el del repo? (s/N): " starship_link
-                case "${starship_link:-N}" in
-                    [sS]) ln -sf "$STARSHIP_SRC" "$STARSHIP_DST" ;;
-                    *) warn "Se conserva $STARSHIP_DST." ;;
-                esac
-            else
-                ln -sf "$STARSHIP_SRC" "$STARSHIP_DST"
-            fi
-        fi
-
-        # Backup .zshrc local antes de reemplazar
-        link_zshrc=1
-        if [[ -L "$HOME/.zshrc" ]] && [[ "$(readlink -f "$HOME/.zshrc")" != "$DOTFILES_DIR/.zshrc" ]]; then
-            warn "Symlink existente: ~/.zshrc -> $(readlink "$HOME/.zshrc")"
-            read -p "¿Reemplazarlo por el del repo? (s/N): " zsh_link
-            case "${zsh_link:-N}" in
-                [nN]) warn "Se conserva ~/.zshrc."; link_zshrc=0 ;;
-            esac
-        elif [[ -f "$HOME/.zshrc" ]] && [[ ! -L "$HOME/.zshrc" ]]; then
-            warn "Config local detectada: ~/.zshrc"
-            read -p "¿Hacer copia de seguridad antes de reemplazar? (S/n): " zsh_backup
-            case "${zsh_backup:-S}" in
-                [nN])
-                    warn "Se conserva ~/.zshrc; no se enlaza el del repo."
-                    link_zshrc=0
-                    ;;
-                *)
-                    if cp "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%Y%m%d-%H%M%S)"; then
-                        success "Backup de ~/.zshrc creado."
-                        rm -f "$HOME/.zshrc"
-                    else
-                        warn "No se pudo crear backup; se conserva ~/.zshrc."
-                        link_zshrc=0
-                    fi
-                    ;;
-            esac
-        fi
-
-        if [[ $link_zshrc -eq 1 ]]; then
-            if [[ -f "$DOTFILES_DIR/.zshrc" ]]; then
-                ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
-                success "Configuración visual y shell enlazada."
-            else
-                warn "No se encontró .zshrc en $DOTFILES_DIR"
-            fi
-        fi
-
-        # ------------------------------------------------------------------
-        # Oh My Zsh (después de enlazar .zshrc para que no lo sobrescriba)
-        # ------------------------------------------------------------------
-        if [[ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]]; then
-            info "Instalando Oh My Zsh..."
-            if command -v curl >/dev/null 2>&1; then
-                sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc 2>/dev/null || warn "No se pudo instalar Oh My Zsh"
-            else
-                warn "Falta curl; no se pudo instalar Oh My Zsh."
-            fi
-            [[ -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]] || warn "Oh My Zsh no quedó instalado correctamente."
-        fi
-
-        # Agregar usuario a grupos necesarios (evita duplicados)
-        sudo usermod -aG video,input,audio "$TARGET_USER" 2>/dev/null
-
-        # ------------------------------------------------------------------
-        # Menú de arranque
-        # ------------------------------------------------------------------
-        print_banner
-        echo -e "${CYAN}${BOLD}¿Cómo prefieres que arranque el sistema?${NC}"
-        echo -e "1) ${BOLD}Auto-login Directo${NC} (TTY1)"
-        echo -e "2) ${BOLD}Gestor Visual (SDDM)${NC}"
-        echo -e "3) ${BOLD}Manual (Terminal)${NC}"
-        read -p "Selecciona una opción [1-3]: " login_choice
-
-        case $login_choice in
-            1)
-                info "Configurando Auto-login..."
-                # Deshabilitar SDDM si estaba activo antes
-                if systemctl is-enabled sddm 2>/dev/null | grep -q enabled; then
-                    sudo systemctl disable sddm 2>/dev/null
-                    info "SDDM deshabilitado (se usará auto-login)"
-                fi
-
-                sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
-                sudo tee /etc/systemd/system/getty@tty1.service.d/override.conf > /dev/null <<EOF
-[Service]
-Type=simple
-ExecStart=
-ExecStart=-/usr/bin/agetty --autologin $TARGET_USER --noclear %I \$TERM
-EOF
-                if ! grep -q "exec Hyprland" ~/.zprofile 2>/dev/null; then
-                    # Asegurar una línea nueva antes de añadir el bloque.
-                    printf '\n' >> ~/.zprofile
-                    cat >> ~/.zprofile <<'EOF'
-if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-    exec Hyprland
-fi
-EOF
-                fi
-                success "Auto-login configurado."
-                ;;
-            2)
-                info "Instalando y habilitando SDDM..."
-                if sudo pacman -S --needed --noconfirm sddm > /dev/null 2>&1 && sudo systemctl enable sddm 2>/dev/null; then
-                    success "SDDM habilitado."
-                else
-                    error "No se pudo instalar o habilitar SDDM."
-                fi
-                ;;
-            3)
-                info "Modo manual seleccionado. No se configuró auto-inicio."
-                ;;
-            *)
-                warn "Opción inválida. No se configuró el arranque."
-                ;;
-        esac
-        ;;
-    2)
-        # Solo AI: dependencias mínimas para audio, captura y ventana de entrada.
-        info "Instalando dependencias mínimas de Proyecto..."
-        sudo pacman -S --needed --noconfirm \
-            python curl kitty grim slurp libnotify portaudio ffmpeg \
-            > /dev/null 2>&1 || warn "Algunos paquetes de Proyecto fallaron"
-        ;;
-    *)
-        error "Opción inválida. Saliendo."
-        exit 1
-        ;;
+case "$GPU_MODE" in
+    ""|intel|nvidia|amd|none) ;;
+    *) err "--gpu debe ser intel, nvidia, amd o none"; exit 2 ;;
 esac
 
-# ------------------------------------------------------------------
-# Configuración de la IA (Proyecto) — opciones 1 y 2
-# ------------------------------------------------------------------
-if [[ $main_choice == "1" || $main_choice == "2" ]]; then
-    info "Configurando IA (Proyecto)..."
+# --- Comprobaciones básicas --------------------------------------------------
+if [[ $EUID -eq 0 ]]; then
+    err "No ejecutes este script como root. Usa tu usuario normal (pedirá sudo si hace falta)."
+    exit 1
+fi
 
-    AI_INSTALL_DIR="$HOME/.config/asistente"
+if [[ ! -d "$SRC_HOME" ]]; then
+    err "No encuentro la carpeta home/ junto al instalador."
+    exit 1
+fi
 
-    # Limpiar instalación anterior (excepto .env y venv para conservar token)
-    if [[ -d "$AI_INSTALL_DIR/ai" ]]; then
-        info "Limpiando instalación anterior de IA..."
-        rm -rf "$AI_INSTALL_DIR/ai"
+if command -v pacman >/dev/null 2>&1; then
+    IS_ARCH=1
+else
+    IS_ARCH=0
+fi
+
+# --- Utilidades --------------------------------------------------------------
+BACKUP_ROOT="$HOME/.dotfiles-backups/$(date +%Y%m%d-%H%M%S)"
+LINKED=0
+COPIED=0
+SKIPPED=0
+
+run() {
+    if (( DRY_RUN )); then
+        printf '%s\n' "  ${PURPLE}[dry-run]${NC} $*"
+    else
+        "$@"
+    fi
+}
+
+confirm() {
+    local prompt="$1" default="${2:-n}" reply
+    if (( ASSUME_YES )); then return 0; fi
+    if (( DRY_RUN )); then return 0; fi
+    if (( ! INTERACTIVE )); then [[ "$default" == "y" ]]; return; fi
+    if [[ "$default" == "y" ]]; then
+        read -r -p "$prompt [S/n]: " reply </dev/tty || reply=""
+        [[ -z "$reply" || "$reply" =~ ^[sSyY] ]]
+    else
+        read -r -p "$prompt [s/N]: " reply </dev/tty || reply=""
+        [[ "$reply" =~ ^[sSyY] ]]
+    fi
+}
+
+is_ours() {
+    [[ -L "$1" ]] || return 1
+    local target
+    target=$(readlink "$1")
+    [[ "$target" == "$REPO_DIR"/* ]]
+}
+
+backup_item() {
+    local dst="$1" rel target
+    [[ -e "$dst" || -L "$dst" ]] || return 0
+    rel="${dst#"$HOME"/}"
+    target="$BACKUP_ROOT/$rel"
+    if (( DRY_RUN )); then
+        printf '%s\n' "  ${PURPLE}[dry-run]${NC} copia de seguridad: $dst -> $target"
+        return 0
+    fi
+    mkdir -p "$(dirname "$target")"
+    if cp -a -- "$dst" "$target"; then
+        infob "Copia de seguridad: $dst -> $target"
+    else
+        warn "No se pudo guardar copia de seguridad de $dst"
+    fi
+}
+
+infob() { printf '%s\n' "${BLUE}${BOLD}INFO${NC}  $*"; }
+
+# Enlaza $src (dentro del repo) con $dst (en el home).
+link_item() {
+    local src="$1" dst="$2"
+    if [[ ! -e "$src" ]]; then
+        warn "No existe en el repo: $src"
+        return 0
     fi
 
-    mkdir -p "$AI_INSTALL_DIR/ai"
-    # Copiar archivos de IA excluyendo __pycache__
-    (cd "$DOTFILES_DIR/modules/ai" && tar cf - --exclude='__pycache__' .) | (cd "$AI_INSTALL_DIR/ai" && tar xf -)
+    if [[ -L "$dst" ]] && [[ "$(readlink "$dst")" == "$src" ]]; then
+        ok "Ya enlazado: $dst"
+        return 0
+    fi
 
-    # Opencode es el motor que responde a Proyecto.
-    if ! command -v opencode >/dev/null 2>&1 && [[ ! -x "$HOME/.opencode/bin/opencode" ]]; then
-        warn "Opencode no está instalado."
-        read -p "¿Instalar Opencode ahora con el instalador oficial? (S/n): " install_opencode
-        case "${install_opencode:-S}" in
-            [nN])
-                warn "La IA no podrá responder hasta que instales Opencode."
-                ;;
-            *)
-                if command -v curl >/dev/null 2>&1; then
-                    curl -fsSL https://opencode.ai/install | bash || warn "No se pudo instalar Opencode."
-                else
-                    warn "Falta curl; instala Opencode manualmente."
-                fi
-                ;;
+    if [[ -e "$dst" || -L "$dst" ]]; then
+        if is_ours "$dst"; then
+            : # enlace antiguo del repo: se reemplaza sin preguntar
+        else
+            if confirm "¿Reemplazar $dst por un enlace al repo?" y; then
+                backup_item "$dst"
+            else
+                warn "Se conserva $dst"
+                SKIPPED=$((SKIPPED + 1))
+                return 0
+            fi
+        fi
+        run rm -rf -- "$dst"
+    fi
+
+    run mkdir -p -- "$(dirname "$dst")"
+    if run ln -s -- "$src" "$dst"; then
+        ok "Enlazado: $dst"
+        LINKED=$((LINKED + 1))
+    else
+        err "No se pudo enlazar $dst"
+    fi
+}
+
+# Copia $src a $dst solo si falta (o si se usa --force).
+copy_item() {
+    local src="$1" dst="$2" mode="${3:-644}"
+    if [[ ! -e "$src" ]]; then
+        warn "No existe en el repo: $src"
+        return 0
+    fi
+
+    if [[ -e "$dst" || -L "$dst" ]]; then
+        if [[ -f "$dst" ]] && cmp -s -- "$src" "$dst"; then
+            ok "Ya actualizado: $dst"
+            return 0
+        fi
+        if is_ours "$dst"; then
+            run rm -rf -- "$dst"
+        elif (( FORCE_COPY )); then
+            backup_item "$dst"
+            run rm -rf -- "$dst"
+        else
+            warn "Se conserva $dst (distinto del repo). Usa --force para reemplazarlo."
+            SKIPPED=$((SKIPPED + 1))
+            return 0
+        fi
+    fi
+
+    run mkdir -p -- "$(dirname "$dst")"
+    if run install -m "$mode" -- "$src" "$dst"; then
+        ok "Copiado: $dst"
+        COPIED=$((COPIED + 1))
+    else
+        err "No se pudo copiar $dst"
+    fi
+}
+
+copy_tree() {
+    local src="$1" dst="$2"
+    if [[ ! -d "$src" ]]; then
+        warn "No existe en el repo: $src"
+        return 0
+    fi
+    if [[ -e "$dst" || -L "$dst" ]]; then
+        if [[ -d "$dst" ]] && [[ ! -L "$dst" ]] && diff -qr -- "$src" "$dst" >/dev/null 2>&1; then
+            ok "Ya actualizado: $dst"
+            return 0
+        fi
+        if is_ours "$dst"; then
+            run rm -rf -- "$dst"
+        elif (( FORCE_COPY )); then
+            backup_item "$dst"
+            run rm -rf -- "$dst"
+        else
+            warn "Se conserva $dst (estado local). Usa --force para reemplazarlo."
+            SKIPPED=$((SKIPPED + 1))
+            return 0
+        fi
+    fi
+    run mkdir -p -- "$(dirname "$dst")"
+    if run cp -a -- "$src" "$dst"; then
+        ok "Copiado: $dst"
+        COPIED=$((COPIED + 1))
+    else
+        err "No se pudo copiar $dst"
+    fi
+}
+
+# --- Configuración -----------------------------------------------------------
+LINK_DIRS=(
+    ".config/hypr"
+    ".config/waybar"
+    ".config/kitty"
+    ".config/rofi"
+    ".config/swaync"
+    ".config/swappy"
+    ".config/starship"
+    ".config/btop"
+    ".config/fastfetch"
+)
+
+LINK_FILES=(
+    ".zshrc"
+    ".zprofile"
+    ".bashrc"
+    ".bash_profile"
+    ".config/mimeapps.list"
+    ".config/user-dirs.dirs"
+)
+
+COPY_FILES=(
+    ".config/gtk-3.0/settings.ini"
+    ".config/gtk-2.0/.gtkrc-2.0"
+    ".config/gtk-4.0/settings.ini"
+)
+
+seed_monitors() {
+    local dst="$HOME/.config/hypr/monitors.lua"
+    local example="$SRC_HOME/.config/hypr/monitors.lua.example"
+    if [[ -e "$dst" ]]; then
+        ok "Se conserva tu configuración de monitores: $dst"
+        return 0
+    fi
+    [[ -f "$example" ]] || { warn "Falta $example"; return 0; }
+    run mkdir -p -- "$HOME/.config/hypr"
+    if run cp -- "$example" "$dst"; then
+        ok "Creada configuración de monitores de ejemplo: $dst"
+        COPIED=$((COPIED + 1))
+    fi
+}
+
+link_bins() {
+    local f base
+    [[ -d "$SRC_BIN" ]] || return 0
+    run mkdir -p -- "$HOME/.local/bin"
+    for f in "$SRC_BIN"/*; do
+        [[ -f "$f" ]] || continue
+        base=$(basename "$f")
+        run chmod +x -- "$f"
+        link_item "$f" "$HOME/.local/bin/$base"
+    done
+}
+
+link_units() {
+    local src="$SRC_HOME/.config/systemd/user"
+    local dst="$HOME/.config/systemd/user"
+    local f
+    [[ -d "$src" ]] || return 0
+    run mkdir -p -- "$dst"
+
+    if [[ -d "$src/hermes-gateway.service.d" ]]; then
+        link_item "$src/hermes-gateway.service.d" "$dst/hermes-gateway.service.d"
+    fi
+
+    for f in "$src"/*.service "$src"/*.timer "$src"/*.target; do
+        [[ -e "$f" ]] || continue
+        link_item "$f" "$dst/$(basename "$f")"
+    done
+}
+
+do_config() {
+    info "Configurando enlaces y archivos del escritorio..."
+    local d f
+
+    for d in "${LINK_DIRS[@]}"; do
+        link_item "$SRC_HOME/$d" "$HOME/$d"
+    done
+
+    seed_monitors
+
+    for d in "${COPY_FILES[@]}"; do
+        copy_item "$SRC_HOME/$d" "$HOME/$d" 644
+    done
+
+    # nwg-displays escribe su propia configuración: se copia como estado local.
+    copy_tree "$SRC_HOME/.config/nwg-displays" "$HOME/.config/nwg-displays"
+
+    for f in "${LINK_FILES[@]}"; do
+        link_item "$SRC_HOME/$f" "$HOME/$f"
+    done
+
+    # Starship busca tanto ~/.config/starship.toml como ~/.config/starship/.
+    link_item "$SRC_HOME/.config/starship/starship.toml" "$HOME/.config/starship.toml"
+
+    link_bins
+    link_units
+
+    if (( ! DRY_RUN )); then
+        systemctl --user daemon-reload 2>/dev/null || true
+    fi
+}
+
+# --- Paquetes ----------------------------------------------------------------
+OFFICIAL_PKGS=(
+    hyprland hyprshutdown hyprcursor hyprland-guiutils
+    waybar swaync swaybg rofi kitty nwg-displays
+    grim slurp swappy wl-clipboard cliphist libnotify
+    brightnessctl playerctl
+    pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber pavucontrol
+    networkmanager network-manager-applet bluez bluez-utils blueman
+    xdg-desktop-portal xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome
+    nautilus qt5-wayland qt6-wayland
+    zsh zsh-autosuggestions zsh-syntax-highlighting
+    starship eza bat fastfetch btop
+    papirus-icon-theme otf-font-awesome ttf-jetbrains-mono-nerd
+    noto-fonts noto-fonts-emoji noto-fonts-cjk
+    git curl base-devel inotify-tools jq socat python
+    power-profiles-daemon
+)
+
+AUR_PKGS=(
+    google-chrome
+    catppuccin-gtk-theme-mocha
+)
+
+ensure_sudo() {
+    (( DRY_RUN )) && return 0
+    command -v sudo >/dev/null 2>&1 || { err "Falta sudo."; return 1; }
+    sudo -v || { err "Se necesitan permisos sudo."; return 1; }
+}
+
+ensure_yay() {
+    command -v yay >/dev/null 2>&1 && return 0
+    info "Instalando yay (ayudante de AUR)..."
+    (( DRY_RUN )) && { run sudo pacman -S --needed --noconfirm git base-devel; run git clone https://aur.archlinux.org/yay.git /tmp/yay-install; return 0; }
+    ensure_sudo || return 1
+    sudo pacman -S --needed --noconfirm git base-devel || return 1
+    rm -rf /tmp/yay-install
+    git clone https://aur.archlinux.org/yay.git /tmp/yay-install || return 1
+    ( cd /tmp/yay-install && makepkg -si --noconfirm ) || return 1
+    rm -rf /tmp/yay-install
+    ok "yay instalado."
+}
+
+check_waybar() {
+    command -v waybar >/dev/null 2>&1 || return 0
+    local ver
+    ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    [[ -n "$ver" ]] || return 0
+    if [[ "$(printf '%s\n' 0.16.0 "$ver" | sort -V | head -1)" != "0.16.0" ]]; then
+        warn "Waybar $ver es anterior a 0.16: los clics en los workspaces de Hyprland 0.57 no funcionarán."
+        warn "Actualiza Waybar (por ejemplo, desde extra-testing o con waybar-git)."
+    fi
+}
+
+do_packages() {
+    if (( ! IS_ARCH )); then
+        err "Este instalador es para Arch Linux (no encuentro pacman)."
+        return 1
+    fi
+
+    if (( UPGRADE_SYSTEM )); then
+        info "Actualizando el sistema..."
+        (( DRY_RUN )) && { run sudo pacman -Syu --noconfirm; } || { ensure_sudo && sudo pacman -Syu --noconfirm; }
+    fi
+
+    info "Instalando paquetes oficiales..."
+    if (( DRY_RUN )); then
+        run sudo pacman -Sy --noconfirm
+        run sudo pacman -S --needed "${OFFICIAL_PKGS[@]}"
+    else
+        ensure_sudo || return 1
+        sudo pacman -Sy --noconfirm >/dev/null 2>&1 || warn "No se pudo refrescar la base de datos de pacman."
+        if sudo pacman -S --needed --noconfirm "${OFFICIAL_PKGS[@]}"; then
+            ok "Paquetes oficiales instalados."
+        else
+            warn "Algunos paquetes oficiales fallaron. Revisa la salida anterior."
+        fi
+    fi
+
+    info "Instalando paquetes de AUR..."
+    if ensure_yay; then
+        if (( DRY_RUN )); then
+            run yay -S --needed "${AUR_PKGS[@]}"
+        elif yay -S --needed --noconfirm --answerclean None --answerdiff None --answeredit None "${AUR_PKGS[@]}"; then
+            ok "Paquetes de AUR instalados."
+        else
+            warn "Algunos paquetes de AUR fallaron. Revisa la salida anterior."
+        fi
+    fi
+
+    check_waybar
+
+    if confirm "¿Habilitar NetworkManager, Bluetooth y power-profiles-daemon?" y; then
+        run sudo systemctl enable --now NetworkManager || warn "No se pudo habilitar NetworkManager"
+        run sudo systemctl enable --now bluetooth || warn "No se pudo habilitar Bluetooth"
+        run sudo systemctl enable --now power-profiles-daemon || warn "No se pudo habilitar power-profiles-daemon"
+    fi
+
+    if confirm "¿Añadir tu usuario a los grupos video, input y audio?" y; then
+        run sudo usermod -aG video,input,audio "$TARGET_USER" || warn "No se pudieron actualizar los grupos"
+    fi
+}
+
+# --- GPU ---------------------------------------------------------------------
+set_gpu_env() {
+    local file="$SRC_HOME/.config/hypr/envvariables.lua" name
+    [[ -f "$file" ]] || { warn "No existe $file"; return 1; }
+
+    if (( DRY_RUN )); then
+        info "[dry-run] Ajustaría la GPU a: $1"
+        return 0
+    fi
+
+    for name in LIBVA_DRIVER_NAME MESA_LOADER_DRIVER_NAME __GLX_VENDOR_LIBRARY_NAME NVD_BACKEND; do
+        sed -i -E "s|^([[:space:]]*)hl\.env\(\"$name\"|\1-- hl.env(\"$name\"|" "$file"
+    done
+
+    case "$1" in
+        intel)
+            sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "iHD"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("MESA_LOADER_DRIVER_NAME", "iris"\))|\1\2|' "$file" ;;
+        nvidia)
+            sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "nvidia"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("__GLX_VENDOR_LIBRARY_NAME", "nvidia"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("NVD_BACKEND", "direct"\))|\1\2|' "$file" ;;
+        amd)
+            sed -i -E 's|^([[:space:]]*)-- (hl\.env\("LIBVA_DRIVER_NAME", "radeonsi"\))|\1\2|; s|^([[:space:]]*)-- (hl\.env\("MESA_LOADER_DRIVER_NAME", "radeonsi"\))|\1\2|' "$file" ;;
+        none) : ;;
+    esac
+    ok "Variables de GPU ajustadas a: $1"
+}
+
+maybe_set_gpu() {
+    local choice="$GPU_MODE"
+    if [[ -z "$choice" ]] && (( DRY_RUN )); then
+        return 0
+    fi
+    if [[ -z "$choice" ]] && (( INTERACTIVE )) && (( ! ASSUME_YES )); then
+        echo ""
+        printf '%s\n' "${PURPLE}${BOLD}¿Qué GPU tienes?${NC}"
+        echo "1) Intel   2) NVIDIA   3) AMD   4) No cambiar"
+        local g
+        read -r -p "Opción [4]: " g </dev/tty || g=""
+        case "$g" in
+            1) choice="intel" ;;
+            2) choice="nvidia" ;;
+            3) choice="amd" ;;
+            *) choice="" ;;
         esac
     fi
+    [[ -n "$choice" ]] && set_gpu_env "$choice"
+}
 
-    # Reemplazar placeholder con la ruta real de Opencode.
-    OPENCODE_BIN=$(command -v opencode 2>/dev/null || true)
-    [[ -n "$OPENCODE_BIN" ]] || OPENCODE_BIN="$HOME/.opencode/bin/opencode"
-    if [[ ! -x "$OPENCODE_BIN" ]]; then
-        warn "No se encontró el ejecutable de Opencode en $OPENCODE_BIN."
-    fi
-    sed -i "s|__OPCODE_PATH__|$OPENCODE_BIN|" "$AI_INSTALL_DIR/ai/config.json"
+# --- Servicios ---------------------------------------------------------------
+do_services() {
+    info "Instalando servicios de usuario..."
+    link_units
 
-    # Copiar focus_listener.sh al directorio de IA para que autostart.lua lo lance
-    cp "$DOTFILES_DIR/core/scripts/focus_listener.sh" "$AI_INSTALL_DIR/focus_listener.sh"
-    chmod +x "$AI_INSTALL_DIR/focus_listener.sh"
-
-    # Entorno virtual de Python. Si Arch actualizó Python, el venv anterior
-    # puede apuntar a un intérprete que ya no existe: se recrea.
-    if [[ -d "$AI_INSTALL_DIR/venv" ]] && ! "$AI_INSTALL_DIR/venv/bin/python" -V >/dev/null 2>&1; then
-        warn "El entorno virtual existente no es válido (¿cambio de versión de Python?). Recreando..."
-        rm -rf "$AI_INSTALL_DIR/venv"
+    if (( ! DRY_RUN )); then
+        systemctl --user daemon-reload 2>/dev/null || warn "No se pudo recargar systemd --user"
     fi
 
-    if [[ ! -d "$AI_INSTALL_DIR/venv" ]]; then
-        info "Creando entorno virtual de Python..."
-        if ! command -v python3 &> /dev/null; then
-            error "python3 no está instalado. Instálalo con: sudo pacman -S python"
-            exit 1
+    # Un servicio con WorkingDirectory apunta a un proyecto externo. Si ese
+    # proyecto no existe en este equipo, no se habilita para no dejar errores.
+    unit_ready() {
+        local unit="$1" file dir target
+        file="$HOME/.config/systemd/user/$unit"
+        if [[ "$unit" == *.timer ]]; then
+            target=$(sed -n 's/^Unit=//p' "$file" 2>/dev/null | head -1)
+            [[ -z "$target" ]] && target="${unit%.timer}.service"
+            unit_ready "$target"
+            return
         fi
-        python3 -m venv "$AI_INSTALL_DIR/venv" || {
-            error "No se pudo crear el entorno virtual. Instala python3-venv con: sudo pacman -S python python-venv"
-            exit 1
-        }
+        dir=$(sed -n 's/^WorkingDirectory=//p' "$file" 2>/dev/null | head -1)
+        dir="${dir//%h/$HOME}"
+        [[ -z "$dir" || -d "$dir" ]]
+    }
+
+    if (( ENABLE_SERVICES )) || confirm "¿Habilitar los servicios instalados para el próximo inicio de sesión?" n; then
+        local unit
+        for unit in ensure-internal-speakers.service hermes-gateway.service lan-mouse.service mydot.service; do
+            if [[ -e "$HOME/.config/systemd/user/$unit" ]]; then
+                if unit_ready "$unit"; then
+                    run systemctl --user enable "$unit" || warn "No se pudo habilitar $unit"
+                else
+                    warn "Se omite $unit: su proyecto externo no existe en este equipo."
+                fi
+            fi
+        done
+        for unit in history_bot.timer mydot-analiticas.timer mydot-copia.timer mydot-kraken.timer; do
+            if [[ -e "$HOME/.config/systemd/user/$unit" ]]; then
+                if unit_ready "$unit"; then
+                    run systemctl --user enable "$unit" || warn "No se pudo habilitar $unit"
+                else
+                    warn "Se omite $unit: su proyecto externo no existe en este equipo."
+                fi
+            fi
+        done
+    fi
+}
+
+# --- Menú --------------------------------------------------------------------
+menu() {
+    echo ""
+    printf '%s\n' "${PURPLE}${BOLD}Instalador de dotfiles — Arch Linux + Hyprland${NC}"
+    echo "  1) Configuración del escritorio"
+    echo "  2) Paquetes"
+    echo "  3) Servicios de usuario"
+    echo "  4) Todo"
+    echo "  5) Salir"
+    local choice
+    read -r -p "Opción [4]: " choice </dev/tty || choice=""
+    case "${choice:-4}" in
+        1) DO_CONFIG=1 ;;
+        2) DO_PACKAGES=1 ;;
+        3) DO_SERVICES=1 ;;
+        4) DO_CONFIG=1; DO_PACKAGES=1; DO_SERVICES=1 ;;
+        5) exit 0 ;;
+        *) err "Opción inválida."; exit 2 ;;
+    esac
+}
+
+if (( ! SECTIONS_SET )); then
+    if (( INTERACTIVE )); then
+        menu
     else
-        info "Entorno virtual ya existe, actualizando..."
-    fi
-
-    source "$AI_INSTALL_DIR/venv/bin/activate"
-
-    pip install --upgrade pip > /dev/null 2>&1
-    info "Instalando dependencias de Python..."
-    pip install -r "$AI_INSTALL_DIR/ai/requirements.txt" > /dev/null 2>&1 &
-    show_progress $! "Instalando dependencias en venv" || warn "Falló alguna dependencia de Python"
-
-    DOT_ENV_FILE="$AI_INSTALL_DIR/.env"
-
-    # Gestión de TOKEN
-    if [[ -z "${TOKEN:-}" ]]; then
-        if [[ -f "$DOT_ENV_FILE" ]]; then
-            TOKEN=$(sed -nE 's/^(export[[:space:]]+)?TOKEN=//p' "$DOT_ENV_FILE" | tail -1 | tr -d '"')
-        fi
-    fi
-
-    if [[ -z "${TOKEN:-}" ]]; then
-        warn "No se encontró TOKEN configurado."
-        read -r -p "Introduce tu TOKEN de Proveedor de modelos (deja vacío para omitir): " hf_token
-        if [[ -n "$hf_token" ]]; then
-            echo "TOKEN=$hf_token" > "$DOT_ENV_FILE"
-            success "Token guardado en $DOT_ENV_FILE"
-        else
-            warn "No se proporcionó token. La IA podría tener problemas para descargar modelos protegidos."
-        fi
-    else
-        success "TOKEN detectado y configurado."
-        if [[ ! -f "$DOT_ENV_FILE" ]]; then
-            echo "TOKEN=$TOKEN" > "$DOT_ENV_FILE"
-        fi
-    fi
-
-    # El token es un secreto: solo el usuario debe poder leerlo.
-    [[ -f "$DOT_ENV_FILE" ]] && chmod 600 "$DOT_ENV_FILE"
-
-    # Pre-descarga de modelos Whisper antes de arrancar el servicio, para que
-    # no descarguen a la vez el instalador y el servicio.
-    info "Descargando modelos de IA (Whisper tiny y base)..."
-    if "$AI_INSTALL_DIR/venv/bin/python" -c "from faster_whisper import WhisperModel; WhisperModel('tiny'); WhisperModel('base')" > /tmp/whisper_download.log 2>&1; then
-        success "Modelos descargados correctamente."
-    else
-        error "Fallo al descargar modelos de IA. Revisa /tmp/whisper_download.log"
-        warn "Es posible que la IA no funcione correctamente sin conexión o espacio en disco."
-    fi
-
-    # Servicio systemd --user
-    mkdir -p "$HOME/.config/systemd/user"
-    cp "$DOTFILES_DIR/core/services/asistente.service" "$HOME/.config/systemd/user/"
-    sed -i "s|ExecStart=.*|ExecStart=\"$AI_INSTALL_DIR/venv/bin/python\" -u \"$AI_INSTALL_DIR/ai/main.py\"|" "$HOME/.config/systemd/user/asistente.service"
-
-    # Pasar el entorno gráfico al gestor de usuario para que el servicio pueda
-    # usar Wayland/grim/kitty aunque se inicie antes que la barra.
-    systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE 2>/dev/null || true
-    systemctl --user daemon-reload 2>/dev/null || warn "No se pudo recargar systemd --user (quizás no hay sesión)"
-    systemctl --user enable --now asistente.service 2>/dev/null || warn "No se pudo habilitar el servicio Proyecto (se iniciará al próximo inicio de sesión)"
-
-    success "IA configurada."
-fi
-
-# ------------------------------------------------------------------
-# Comprobación de binarios del entorno gráfico
-# ------------------------------------------------------------------
-if [[ $main_choice == "1" || $main_choice == "3" ]]; then
-    for cmd in waybar swaync swaybg nm-applet blueman-applet google-chrome-stable kitty rofi nautilus grim slurp cliphist; do
-        command -v "$cmd" >/dev/null 2>&1 || warn "Falta '$cmd'; revisa la instalación de paquetes (era parte del entorno gráfico)."
-    done
-    command -v hyprshutdown >/dev/null 2>&1 || warn "Falta 'hyprshutdown' (opcional); SUPER+M usará el fallback de Hyprland."
-
-    # Hyprland 0.57 usa dispatchers Lua. Waybar < 0.16 sigue enviando
-    # "dispatch workspace N" por IPC y los clicks en workspaces no hacen nada.
-    if command -v waybar >/dev/null 2>&1; then
-        waybar_ver=$(waybar --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        if [[ -n "$waybar_ver" ]] && [[ "$(printf '%s\n' 0.16.0 "$waybar_ver" | sort -V | head -1)" != "0.16.0" ]]; then
-            warn "Waybar $waybar_ver es anterior a 0.16.0: los clicks en workspaces no funcionan con Hyprland 0.57 (Lua). Actualiza a Waybar >= 0.16."
-        fi
+        info "Sin terminal interactiva: se aplica solo la configuración (--only config)."
+        DO_CONFIG=1
     fi
 fi
 
+(( DRY_RUN )) && warn "Modo simulación: no se cambiará nada."
+(( ASSUME_YES )) && info "Modo --yes: se usarán los valores por defecto."
 echo ""
-info "¡Instalación completada!"
-read -p "¿Reiniciar ahora? (s/n): " confirm_reboot
-[[ $confirm_reboot == [sS] ]] && sudo reboot
+
+# --- Ejecución ---------------------------------------------------------------
+if (( DO_CONFIG )); then
+    do_config
+fi
+
+if (( DO_CONFIG )) || [[ -n "$GPU_MODE" ]]; then
+    maybe_set_gpu
+fi
+
+if (( DO_PACKAGES )); then
+    do_packages
+fi
+
+if (( DO_SERVICES )); then
+    do_services
+fi
+
+# --- Resumen -----------------------------------------------------------------
+echo ""
+printf '%s\n' "${PURPLE}${BOLD}Resumen${NC}"
+echo "  Enlaces creados:      $LINKED"
+echo "  Archivos copiados:    $COPIED"
+echo "  Elementos conservados: $SKIPPED"
+if [[ -d "$BACKUP_ROOT" ]]; then
+    echo "  Copias de seguridad:  $BACKUP_ROOT"
+fi
+(( DRY_RUN )) && echo "  (simulación: no se modificó nada)"
+echo ""
+ok "Terminado. Cierra sesión y vuelve a entrar para aplicar los cambios de Hyprland."

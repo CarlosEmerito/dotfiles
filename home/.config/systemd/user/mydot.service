@@ -1,0 +1,19 @@
+[Unit]
+Description=myDot — la aplicación personal de Emérito
+# Tailscale va primero: myDot se sirve en la IP del tailnet.
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Proyectos/myDot
+ExecStart=%h/Proyectos/myDot/run.sh
+# `always`: ante cualquier salida vuelve, no solo si el código es de error. Un
+# `systemctl --user stop` lo respeta igual (systemd no reintenta una parada pedida).
+Restart=always
+RestartSec=5
+# Hogar de datos explícito, para que no dependa del entorno del arranque.
+Environment=MYDOT_DATA_DIR=%h/Proyectos/myDot/data
+
+[Install]
+WantedBy=default.target

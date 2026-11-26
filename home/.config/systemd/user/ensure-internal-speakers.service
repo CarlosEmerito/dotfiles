@@ -1,0 +1,13 @@
+[Unit]
+Description=Garantiza que el sonido salga por los altavoces internos
+After=pipewire.service wireplumber.service pipewire-pulse.service hermes-gateway.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/ensure-internal-speakers.sh
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
