@@ -23,7 +23,7 @@ window#waybar {
     background: rgba(20, 16, 32, 0.92);
     color: @fg;
     border-bottom: 1px solid rgba(58, 44, 82, 0.8);
-    padding: 0 8px;
+    padding: 0 8px 0 0;
 }
 
 window#waybar.hidden {
@@ -32,18 +32,20 @@ window#waybar.hidden {
 
 #workspaces {
     background: @surface;
-    border-radius: 9px;
-    margin: 4px 3px;
-    padding: 0 3px;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    min-height: 32px;
 }
 
 #workspaces button {
-    padding: 0 7px;
+    padding: 0 9px;
+    min-height: 32px;
     color: @muted;
     background-color: transparent;
     background-image: none;
     border: none;
-    border-radius: 7px;
+    border-radius: 0;
     box-shadow: none;
     transition: none;
 }
