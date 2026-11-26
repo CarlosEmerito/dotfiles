@@ -33,6 +33,7 @@
     ],
     "logo": {
         "type": "small",
+        "source": "arch_old",
         "color": {
             "1": "#8B5CF6",
             "2": "#B79CFF",
