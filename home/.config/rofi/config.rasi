@@ -1,23 +1,24 @@
 /**
- * EmeDotEme Custom Theme - Purple & Yellow
- * Menú de aplicaciones: 3 columnas, búsqueda fuzzy y modos internos.
+ * Rofi — Lanzador oscuro
+ * Violeta suave, superficies en capas y acento dorado.
  */
 
 configuration {
     modes: "drun,run,window";
     show-icons: true;
-    icon-theme: "Papirus";
+    icon-theme: "Papirus-Dark";
 
-    /* Solo el nombre de la app, sin el nombre genérico entre paréntesis. */
+    display-drun: "Apps";
+    display-run: "Comandos";
+    display-window: "Ventanas";
+
+    /* Solo el nombre de la app. */
     drun-display-format: "{name}";
     drun-match-fields: "name";
 
-    /* Rofi 2.1.1 muestra cada acción del .desktop como una entrada más
-       (Steam - Tienda, LibreOffice - Calc...). Se desactiva para no llenar
-       el menú de duplicados. */
+    /* En Rofi 2.1.1 las acciones se añaden como entradas duplicadas. */
     drun-show-actions: false;
 
-    /* Búsqueda tolerante a errores y orden por relevancia. */
     matching: "fuzzy";
     case-smart: true;
     tokenize: true;
@@ -30,84 +31,160 @@ configuration {
 }
 
 * {
-    bg-col:  #191324;
-    bg-col-light: #2A1E38;
-    border-col: #9D4EDD;
-    selected-col: #F9D342;
-    purple: #9D4EDD;
-    yellow: #F9D342;
-    fg-col: #EBE5F0;
-    fg-col2: #F9D342;
-    grey: #A394B0;
+    bg:          #141020;
+    surface:     #1E182C;
+    surface-alt: #241C35;
+    line:        #3A2C52;
+    fg:          #EDE8F5;
+    muted:       #A396B8;
+    accent:      #8B5CF6;
+    accent-soft: #B79CFF;
+    gold:        #E8C547;
 
-    font: "JetBrainsMono Nerd Font 14";
-}
+    /* Estados de las filas: sin el blanco por defecto de Rofi. */
+    normal-background:            transparent;
+    normal-foreground:            @fg;
+    alternate-normal-background:  transparent;
+    alternate-normal-foreground:  @fg;
+    selected-normal-background:   @accent;
+    selected-normal-foreground:   #FFFFFF;
+    active-background:            @surface-alt;
+    active-foreground:            @accent-soft;
+    selected-active-background:   @accent;
+    selected-active-foreground:   #FFFFFF;
+    urgent-background:            #3A1F2B;
+    urgent-foreground:            #FF9AAE;
+    selected-urgent-background:   #C0395A;
+    selected-urgent-foreground:   #FFFFFF;
 
-element-text, element-icon , mode-switcher {
-    background-color: inherit;
-    text-color:       inherit;
+    font: "Noto Sans 11";
 }
 
 window {
-    width: 900px;
-    border: 2px;
-    border-color: @purple;
-    background-color: @bg-col;
-    border-radius: 16px;
+    width: 960px;
+    padding: 14px;
+    border: 1px;
+    border-color: @line;
+    border-radius: 18px;
+    background-color: @bg;
 }
 
 mainbox {
-    background-color: @bg-col;
+    padding: 0;
+    background-color: transparent;
 }
 
 inputbar {
-    children: [prompt,entry];
-    background-color: @bg-col;
-    border-radius: 5px;
-    padding: 2px;
+    padding: 4px;
+    margin: 0 0 12px 0;
+    background-color: @surface;
+    border-radius: 12px;
+    children: [prompt, entry];
 }
 
 prompt {
-    enabled: false;
-    background-color: @yellow;
-    padding: 6px;
-    text-color: @bg-col;
-    border-radius: 3px;
-    margin: 20px 0px 0px 20px;
+    enabled: true;
+    padding: 7px 12px;
+    margin: 0 8px 0 0;
+    background-color: @gold;
+    text-color: #1A1423;
+    border-radius: 9px;
 }
 
 entry {
-    padding: 8px;
-    margin: 20px 0px 0px 20px;
-    text-color: @fg-col;
-    placeholder: "Buscar aplicaciones…";
-    placeholder-color: @grey;
-    background-color: @bg-col;
+    padding: 8px 4px;
+    margin: 0;
+    text-color: @fg;
+    placeholder: "Buscar…";
+    placeholder-color: @muted;
+    background-color: transparent;
 }
 
 listview {
-    border: 0px 0px 0px;
-    padding: 6px 0px 0px;
-    margin: 12px 0px 0px 20px;
+    padding: 0;
+    margin: 0;
+    spacing: 3px;
     columns: 3;
     lines: 6;
-    background-color: @bg-col;
+    background-color: transparent;
+    border: 0;
+    scrollbar: false;
 }
 
 element {
-    padding: 6px;
-    background-color: @bg-col;
-    text-color: @fg-col;
+    padding: 9px 10px;
+    spacing: 10px;
+    border-radius: 9px;
+    background-color: @surface;
+    text-color: @fg;
 }
 
-element-icon {
-    size: 32px;
+element normal.normal {
+    background-color: @surface;
+    text-color: @fg;
+}
+
+element alternate.normal {
+    background-color: @surface;
+    text-color: @fg;
 }
 
 element selected.normal {
-    background-color: @selected-col;
-    text-color: @bg-col;
-    border-radius: 4px;
+    background-color: @accent;
+    text-color: #FFFFFF;
+    border-radius: 9px;
+}
+
+/* Ventana activa en el modo Ventanas. */
+element normal.active {
+    background-color: @surface-alt;
+    text-color: @accent-soft;
+}
+
+element alternate.active {
+    background-color: @surface-alt;
+    text-color: @accent-soft;
+}
+
+element selected.active {
+    background-color: @accent;
+    text-color: #FFFFFF;
+    border-radius: 9px;
+}
+
+element normal.urgent {
+    background-color: @surface;
+    text-color: #FF9AAE;
+}
+
+element alternate.urgent {
+    background-color: @surface;
+    text-color: #FF9AAE;
+}
+
+element selected.urgent {
+    background-color: #C0395A;
+    text-color: #FFFFFF;
+    border-radius: 9px;
+}
+
+element-icon {
+    size: 30px;
+    background-color: transparent;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    vertical-align: 0.5;
+}
+
+scrollbar {
+    width: 4px;
+    handle-width: 4px;
+    handle-color: rgba(139, 92, 246, 0.65);
+    background-color: transparent;
+    border-radius: 2px;
 }
 
 mode-switcher {
@@ -115,28 +192,26 @@ mode-switcher {
 }
 
 button {
-    padding: 10px;
-    background-color: @bg-col-light;
-    text-color: @grey;
-    vertical-align: 0.5;
-    horizontal-align: 0.5;
+    padding: 8px 12px;
+    background-color: @surface;
+    text-color: @muted;
+    border-radius: 8px;
 }
 
 button selected {
-    background-color: @bg-col;
-    text-color: @yellow;
+    background-color: @accent;
+    text-color: #FFFFFF;
 }
 
 message {
-    background-color: @bg-col-light;
-    margin: 2px;
-    padding: 2px;
-    border-radius: 5px;
+    background-color: @surface-alt;
+    margin: 4px 0 0 0;
+    padding: 8px 10px;
+    border-radius: 8px;
 }
 
 textbox {
-    padding: 6px;
-    margin: 20px 0px 0px 20px;
-    text-color: @yellow;
-    background-color: @bg-col-light;
+    padding: 6px 4px;
+    text-color: @accent-soft;
+    background-color: transparent;
 }
