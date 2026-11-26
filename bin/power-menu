@@ -16,7 +16,7 @@ choice=$(printf '%s\n' \
 
 case "$choice" in
     Bloquear)         exec hyprlock ;;
-    "Cerrar sesión")  exec hyprctl dispatch exit ;;
+    "Cerrar sesión")  exec hyprctl dispatch 'hl.dsp.exit()' ;;
     Reiniciar)        exec systemctl reboot ;;
     Apagar)           exec systemctl poweroff ;;
 esac
