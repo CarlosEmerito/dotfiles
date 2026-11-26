@@ -114,3 +114,7 @@ dotfiles/
 ## Documentación
 
 - [Guía de instalación detallada](docs/INSTALAR.md)
+
+## Licencia
+
+MIT. Consulta el archivo [LICENSE](LICENSE).
