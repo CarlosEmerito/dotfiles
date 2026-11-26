@@ -77,7 +77,20 @@ Coloca las pantallas y pulsa **Apply**. Se generará
 Cierra sesión y vuelve a entrar, o reinicia. Hyprland cargará la configuración
 nueva.
 
-## 8. Servicios opcionales
+## 8. Personalizar el aspecto
+
+La paleta y los archivos del tema están documentados en
+[`docs/TEMAS.md`](TEMAS.md). Allí se explica qué archivo controla cada color.
+
+Los atajos nuevos más útiles:
+
+- `Super + Space`: aplicaciones.
+- `Super + Shift + Space`: ventanas abiertas.
+- `Ctrl + Tab` dentro de Rofi: Apps / Comandos / Ventanas.
+- `Super + Escape`: menú de apagado.
+- `Super + L`: bloquear la pantalla.
+
+## 9. Servicios opcionales
 
 Los servicios de systemd de usuario se instalan, pero no se habilitan por
 defecto. Para habilitarlos:
@@ -97,7 +110,7 @@ Algunos servicios necesitan proyectos externos:
 Si esos proyectos no existen, el servicio fallará. Puedes ignorarlo o no
 habilitarlo.
 
-## 9. Actualizar
+## 10. Actualizar
 
 ```bash
 cd ~/dotfiles
@@ -111,7 +124,7 @@ cambió algo que se copia (ajustes GTK o `nwg-displays`), ejecuta:
 ./install.sh --only config --force
 ```
 
-## 10. Si algo sale mal
+## 11. Si algo sale mal
 
 Las copias de seguridad están en:
 

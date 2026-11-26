@@ -14,6 +14,12 @@ escritorio en un equipo nuevo con un solo comando.
 
 No incluye secretos, tokens, cachés ni el estado interno de las aplicaciones.
 
+## Tema
+
+El escritorio usa una paleta oscura violeta/dorado: Waybar, Rofi, SwayNC,
+Kitty, btop, Starship, Hyprland y la pantalla de bloqueo comparten los mismos
+colores. La referencia completa está en [docs/TEMAS.md](docs/TEMAS.md).
+
 ## Requisitos
 
 - Arch Linux (con `pacman`).
@@ -71,7 +77,8 @@ dotfiles/
 ├── install.sh          Instalador
 ├── home/               Copia de la carpeta personal
 │   ├── .zshrc  .zprofile  .bashrc  .bash_profile
-│   └── .config/        Hyprland, Waybar, Kitty, Rofi, servicios…
+│   ├── .config/        Hyprland, Waybar, Kitty, Rofi, servicios…
+│   └── .local/share/   Lanzadores .desktop y fondo de pantalla
 ├── bin/                Scripts propios para ~/.local/bin
 └── docs/               Guías
 ```
@@ -82,6 +89,10 @@ dotfiles/
 | :--- | :--- |
 | `Super + Q` / `Super + Enter` | Terminal (Kitty) |
 | `Super + Space` | Lanzador de aplicaciones (Rofi) |
+| `Super + Shift + Space` | Selector de ventanas (Rofi) |
+| `Ctrl + Tab` (en Rofi) | Cambiar Apps / Comandos / Ventanas |
+| `Super + Escape` | Menú de apagado y bloqueo |
+| `Super + L` | Bloquear la pantalla |
 | `Super + E` | Explorador de archivos (Nautilus) |
 | `Super + F` | Navegador (Chrome) |
 | `Super + C` / `Alt + F4` | Cerrar ventana |
@@ -109,11 +120,16 @@ dotfiles/
   `history_bot`, `hermes-gateway`) esperan proyectos en `~/Proyectos/myDot`,
   `~/faceless_history_bot` y `~/.hermes`. Si no existen, el servicio fallará;
   el instalador no los habilita por defecto.
+- **Red:** `nm-applet` ya no se inicia. El módulo de red de Waybar muestra el
+  estado y al hacer clic abre `nm-connection-editor`.
+- **Primer clic en Waybar:** Hyprland precalienta `systeminfo` al arrancar para
+  evitar el tirón del primer clic en un workspace.
 - **Actualizar:** `cd ~/dotfiles && git pull`. Los enlaces hacen el resto.
 
 ## Documentación
 
 - [Guía de instalación detallada](docs/INSTALAR.md)
+- [Paleta y archivos del tema](docs/TEMAS.md)
 
 ## Licencia
 
