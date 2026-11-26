@@ -23,6 +23,7 @@ window#waybar {
     background: rgba(20, 16, 32, 0.92);
     color: @fg;
     border-bottom: 1px solid rgba(58, 44, 82, 0.8);
+    padding: 0 8px;
 }
 
 window#waybar.hidden {
@@ -130,8 +131,14 @@ window#waybar.hidden {
 }
 
 #tray {
-    background: transparent;
-    padding: 0 6px;
+    background: @surface;
+    padding: 0 10px;
+    margin: 4px 2px;
+    border-radius: 9px;
+}
+
+#tray > widget {
+    margin: 0 2px;
 }
 
 #tray > .passive {
