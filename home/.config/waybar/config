@@ -18,10 +18,10 @@
             "mode": "month",
             "on-scroll": 1,
             "format": {
-                "months": "<span color='#89b4fa'><b>{}</b></span>",
-                "days": "<span color='#cba6f7'><b>{}</b></span>",
-                "weekdays": "<span color='#f9e2af'><b>{}</b></span>",
-                "today": "<span color='#f38ba8'><b><u>{}</u></b></span>"
+                "months": "<span color='#B79CFF'><b>{}</b></span>",
+                "days": "<span color='#8B5CF6'><b>{}</b></span>",
+                "weekdays": "<span color='#A396B8'><b>{}</b></span>",
+                "today": "<span color='#E8C547'><b><u>{}</u></b></span>"
             }
         }
     },

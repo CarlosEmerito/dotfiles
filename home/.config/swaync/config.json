@@ -1,26 +1,62 @@
 {
-  "max-visible": 5,
-  "default-timeout": 5000,
-  "hide-on-action": false,
-  "transient-gaps": true,
+  "$schema": "/etc/xdg/swaync/configSchema.json",
+  "ignore-gtk-theme": true,
+  "positionX": "right",
+  "positionY": "top",
   "layer": "overlay",
-  "anchors": "bottom-right",
-  "margin-right": 20,
-  "margin-bottom": 20,
-  "width": 350,
-  "height": 400,
-  "control-center-width": 400,
+  "control-center-layer": "top",
+  "layer-shell": true,
+  "layer-shell-cover-screen": true,
+  "cssPriority": "user",
+  "control-center-margin-top": 8,
+  "control-center-margin-bottom": 8,
+  "control-center-margin-right": 8,
+  "control-center-margin-left": 8,
+  "notification-2fa-action": true,
+  "notification-inline-replies": false,
+  "notification-body-image-height": 100,
+  "notification-body-image-width": 200,
+  "timeout": 5,
+  "timeout-low": 3,
+  "timeout-critical": 0,
+  "fit-to-screen": true,
+  "relative-timestamps": true,
+  "control-center-width": 420,
   "control-center-height": 600,
-  "notification-icon-size": 48,
-  "app-icon-size": 32,
-  "default-layout": "list",
-  "sort": "time",
-  "group": true,
-  "group-raise": true,
-  "icon-theme": "Papirus-Dark",
-  "icons": {
-    "notification": "dialog-information",
-    "zero": "notification-disabled",
-    "multiple": "notification-new"
+  "notification-window-width": 380,
+  "keyboard-shortcuts": true,
+  "notification-grouping": true,
+  "image-visibility": "when-available",
+  "transition-time": 200,
+  "hide-on-clear": false,
+  "hide-on-action": false,
+  "text-empty": "Sin notificaciones",
+  "script-fail-notify": true,
+  "scripts": {},
+  "notification-visibility": {},
+  "widgets": [
+    "title",
+    "dnd",
+    "notifications",
+    "mpris"
+  ],
+  "widget-config": {
+    "notifications": {
+      "vexpand": true
+    },
+    "title": {
+      "text": "Notificaciones",
+      "clear-all-button": true,
+      "button-text": "Limpiar"
+    },
+    "dnd": {
+      "text": "No molestar"
+    },
+    "mpris": {
+      "blacklist": [],
+      "autohide": false,
+      "show-album-art": "always",
+      "loop-carousel": false
+    }
   }
 }

@@ -15,8 +15,8 @@ hl.config({
     general = {
         -- EmeDotEme Theme Borders (Purple to Yellow gradient)
         col = {
-            active_border   = { colors = { "rgba(9D4EDDee)", "rgba(F9D342ee)" }, angle = 45 },
-            inactive_border = "rgba(191324aa)",
+            active_border   = { colors = { "rgba(8B5CF6ee)", "rgba(E8C547ee)" }, angle = 45 },
+            inactive_border = "rgba(241C35cc)",
         },
 
         -- Set to true enable resizing windows by clicking and dragging on borders and gaps
@@ -29,7 +29,7 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 10,
+        rounding       = 12,
         rounding_power = 2,
 
         -- Change transparency of focused and unfocused windows
@@ -40,7 +40,7 @@ hl.config({
             enabled      = true,
             range        = 4,
             render_power = 3,
-            color        = "rgba(1a1a1aee)",
+            color        = "rgba(0B0812cc)",
         },
 
         blur = {

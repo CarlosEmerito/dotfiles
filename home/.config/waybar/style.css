@@ -1,26 +1,28 @@
-/* EmeDotEme Custom Theme - Purple & Yellow */
-@define-color bg-dark   #191324;
-@define-color surface   #2A1E38;
-@define-color text      #EBE5F0;
-@define-color purple    #9D4EDD;
-@define-color yellow    #F9D342;
-@define-color subtext   #A394B0;
-@define-color red       #FF5555;
+/* Lanzador oscuro — Waybar */
+
+@define-color bg       #141020;
+@define-color surface  #1E182C;
+@define-color surface2 #241C35;
+@define-color line     #3A2C52;
+@define-color fg       #EDE8F5;
+@define-color muted    #A396B8;
+@define-color accent   #8B5CF6;
+@define-color accent2  #B79CFF;
+@define-color gold     #E8C547;
+@define-color red      #FF6B81;
 
 * {
     border: none;
     border-radius: 0;
-    font-family: "JetBrains Mono Nerd Font", "Font Awesome 7 Free", "Font Awesome 6 Free", sans-serif;
-    font-size: 13px;
+    font-family: "Noto Sans", "JetBrainsMono Nerd Font", "Font Awesome 7 Free", sans-serif;
+    font-size: 12px;
     min-height: 0;
 }
 
 window#waybar {
-    background: rgba(25, 19, 36, 0.95);
-    color: @text;
-    transition-property: background-color;
-    transition-duration: .5s;
-    border-bottom: 2px solid @purple;
+    background: rgba(20, 16, 32, 0.92);
+    color: @fg;
+    border-bottom: 1px solid rgba(58, 44, 82, 0.8);
 }
 
 window#waybar.hidden {
@@ -28,24 +30,32 @@ window#waybar.hidden {
 }
 
 #workspaces {
-    margin: 0 4px;
+    background: @surface;
+    border-radius: 9px;
+    margin: 4px 3px;
+    padding: 0 3px;
 }
 
 #workspaces button {
-    padding: 0 4px;
-    color: @subtext;
-    transition: all 0.3s ease;
+    padding: 0 7px;
+    color: @muted;
+    border-radius: 7px;
+    transition: all 0.2s ease;
+}
+
+#workspaces button:hover {
+    background: @surface2;
+    color: @fg;
 }
 
 #workspaces button.active {
-    color: @yellow;
-    text-shadow: 0 0 8px rgba(249, 211, 66, 0.5);
-    border-bottom: 2px solid @yellow;
+    background: @accent;
+    color: #FFFFFF;
 }
 
 #workspaces button.urgent {
-    color: @red;
-    background: rgba(255, 85, 85, 0.15);
+    background: @red;
+    color: #FFFFFF;
 }
 
 #clock,
@@ -59,39 +69,52 @@ window#waybar.hidden {
 #pulseaudio,
 #tray,
 #mode,
-#idle_inhibitor,
-#window,
-#workspaces {
+#idle_inhibitor {
+    background: @surface;
+    color: @fg;
     padding: 0 10px;
-    margin: 0 2px;
-    color: @text;
+    margin: 4px 2px;
+    border-radius: 9px;
 }
 
 #window {
-    color: @purple;
+    color: @muted;
+    padding: 0 8px;
+    margin: 4px 2px;
+    font-weight: 500;
+}
+
+#clock {
+    color: @gold;
     font-weight: 600;
 }
 
 #battery {
-    color: @yellow;
+    color: @gold;
 }
 
 #battery.charging,
 #battery.plugged {
-    color: @purple;
+    color: @accent2;
 }
 
 #battery.critical:not(.charging) {
     color: @red;
-    animation: blink 0.5s linear infinite alternate;
+    animation: blink 1s linear infinite alternate;
 }
 
-#cpu, #memory, #temperature {
-    color: @subtext;
+#cpu,
+#memory,
+#temperature {
+    color: @muted;
+}
+
+#temperature.critical {
+    color: @red;
 }
 
 #network {
-    color: @purple;
+    color: @accent2;
 }
 
 #network.disconnected {
@@ -99,32 +122,52 @@ window#waybar.hidden {
 }
 
 #pulseaudio {
-    color: @yellow;
+    color: @fg;
 }
 
 #pulseaudio.muted {
-    color: @subtext;
+    color: @muted;
 }
 
 #tray {
     background: transparent;
+    padding: 0 6px;
 }
 
-#clock {
-    color: @yellow;
-    font-weight: 600;
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+}
+
+tooltip {
+    background: @surface2;
+    border: 1px solid @line;
+    border-radius: 10px;
+}
+
+tooltip label {
+    color: @fg;
 }
 
 window#waybar.popup {
-    background: @bg-dark;
+    background: @bg;
 }
 
 window#waybar.popup > .tool-tip {
-    background: @surface;
-    border: 1px solid @purple;
-    border-radius: 8px;
+    background: @surface2;
+    border: 1px solid @line;
+    border-radius: 10px;
 }
 
 window#waybar.popup > .tool-tip label {
-    color: @text;
+    color: @fg;
+}
+
+@keyframes blink {
+    to {
+        opacity: 0.5;
+    }
 }

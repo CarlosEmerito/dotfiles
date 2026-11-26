@@ -1,63 +1,110 @@
-/* EmeDotEme Custom Theme - Purple & Yellow for SwayNC */
-@define-color bg-dark   #191324;
-@define-color surface   #2A1E38;
-@define-color text      #EBE5F0;
-@define-color purple    #9D4EDD;
-@define-color yellow    #F9D342;
-@define-color subtext   #A394B0;
+/* Lanzador oscuro — SwayNC 0.12 */
+
+:root {
+    --cc-bg: #141020;
+    --noti-bg: 20, 16, 32;
+    --noti-bg-alpha: 0.98;
+    --noti-bg-darker: #1E182C;
+    --noti-bg-hover: #241C35;
+    --noti-bg-focus: rgba(139, 92, 246, 0.14);
+    --noti-close-bg: #241C35;
+    --noti-close-bg-hover: #3A2C52;
+    --text-color: #EDE8F5;
+    --text-color-disabled: #A396B8;
+    --bg-selected: #8B5CF6;
+    --noti-border-color: #3A2C52;
+    --border: 1px solid #3A2C52;
+    --border-radius: 14px;
+    --notification-icon-size: 48px;
+    --notification-app-icon-size: 16px;
+    --notification-group-icon-size: 32px;
+    --font-size-body: 13px;
+    --font-size-summary: 13px;
+}
+
+@define-color bg       #141020;
+@define-color surface  #1E182C;
+@define-color surface2 #241C35;
+@define-color line     #3A2C52;
+@define-color fg       #EDE8F5;
+@define-color muted    #A396B8;
+@define-color accent   #8B5CF6;
+@define-color accent2  #B79CFF;
+@define-color gold     #E8C547;
+@define-color red      #FF6B81;
 
 * {
-    border: none;
-    border-radius: 0;
-    font-family: "JetBrains Mono Nerd Font", sans-serif;
+    font-family: "Noto Sans", sans-serif;
     font-size: 13px;
 }
 
-window#notification {
-    background-color: @bg-dark;
-    color: @text;
-    border-radius: 12px;
-    border: 1px solid @purple;
-}
-
-window#control-center {
-    background-color: @bg-dark;
-    color: @text;
-    border-radius: 12px;
-    border: 1px solid @purple;
-}
-
-.notification-content {
+notificationwindow,
+blankwindow {
     background: transparent;
-    padding: 10px;
 }
 
-.notification-default-action {
-    padding: 10px;
-    border-radius: 10px;
-    transition: all 0.2s ease-in-out;
+.close-button {
+    background: @surface2;
+    color: @fg;
+    border-radius: 100%;
+    min-width: 24px;
+    min-height: 24px;
 }
 
-.notification-default-action:hover {
-    background: @surface;
+.close-button:hover {
+    background: @line;
+}
+
+.notification-row {
+    background: none;
+    outline: none;
+}
+
+.notification-row:focus {
+    background: var(--noti-bg-focus);
+}
+
+.notification-row .notification-background {
+    padding: 6px 12px;
+}
+
+.notification-row .notification-background .notification {
+    background: rgba(20, 16, 32, 0.98);
+    border: 1px solid @line;
+    border-radius: 14px;
+}
+
+.notification-row .notification-background .notification .notification-default-action {
+    border-radius: 14px;
+    color: @fg;
+}
+
+.notification-row .notification-background .notification .notification-default-action:hover {
+    background: @surface2;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content {
+    padding: 4px;
 }
 
 .summary {
-    font-weight: bold;
-    color: @yellow;
-    font-size: 14px;
+    color: @gold;
+    font-weight: 700;
+    font-size: 13px;
 }
 
 .time {
-    color: @subtext;
+    color: @muted;
+    font-size: 11px;
 }
 
 .body {
-    color: @text;
+    color: @fg;
 }
 
 .control-center {
-    background: @bg-dark;
+    background: @bg;
+    border-radius: 14px;
 }
 
 .control-center-list {
@@ -65,55 +112,79 @@ window#control-center {
 }
 
 .widget-title {
-    color: @purple;
-    font-weight: bold;
-    font-size: 18px;
-    margin: 10px;
+    color: @accent2;
+    font-weight: 700;
+    font-size: 16px;
+    margin: 12px;
 }
 
 .widget-dnd {
-    color: @purple;
-    margin: 10px;
+    color: @muted;
+    margin: 12px;
 }
 
 .widget-dnd > switch {
-    background: @surface;
+    background: @surface2;
     border-radius: 10px;
 }
 
 .widget-dnd > switch:checked {
-    background: @yellow;
+    background: @accent;
 }
 
 .widget-dnd > switch slider {
-    background: @text;
+    background: @fg;
     border-radius: 10px;
 }
 
 .widget-label {
-    color: @text;
-    margin: 10px;
+    color: @muted;
+    margin: 10px 12px;
 }
 
 .widget-mpris {
     background: @surface;
-    padding: 10px;
-    margin: 10px;
-    border-radius: 10px;
+    padding: 12px;
+    margin: 10px 12px;
+    border-radius: 12px;
 }
 
 .widget-mpris-player {
-    padding: 5px;
-    margin: 5px;
+    padding: 4px;
+    margin: 4px;
 }
 
 .widget-mpris-title {
-    font-weight: bold;
-    font-size: 16px;
-    color: @yellow;
+    color: @gold;
+    font-weight: 700;
+    font-size: 14px;
 }
 
 .widget-mpris-subtitle {
+    color: @muted;
     font-size: 12px;
-    color: @text;
+}
+
+.widget-volume,
+.widget-backlight {
+    background: @surface;
+    border-radius: 12px;
+    padding: 10px;
+    margin: 10px 12px;
+}
+
+.widget-volume label,
+.widget-backlight label {
+    color: @muted;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button {
+    background: @surface;
+    color: @fg;
+    border-radius: 10px;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button:hover {
+    background: @accent;
+    color: #FFFFFF;
 }
