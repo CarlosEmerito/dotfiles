@@ -305,6 +305,8 @@ LINK_FILES=(
     ".bash_profile"
     ".config/mimeapps.list"
     ".config/user-dirs.dirs"
+    ".local/share/applications/bluetui.desktop"
+    ".local/share/applications/opencode.desktop"
 )
 
 COPY_FILES=(

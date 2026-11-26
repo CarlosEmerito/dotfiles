@@ -1,6 +1,27 @@
 -- EmeDotEme — Variables de entorno para Hyprland
 -- Migrado desde envvariables.conf
 
+-- Añadir binarios de usuario al PATH de la sesión. Así Rofi (Comandos y
+-- lanzadores .desktop) encuentra opencode y los scripts de ~/.local/bin.
+-- Se normaliza en cada recarga para no duplicar las rutas.
+local home = os.getenv("HOME")
+if home and home ~= "" then
+    local wanted = { home .. "/.opencode/bin", home .. "/.local/bin" }
+    local parts = {}
+    for part in (os.getenv("PATH") or ""):gmatch("[^:]+") do
+        local keep = true
+        for _, w in ipairs(wanted) do
+            if part == w then keep = false end
+        end
+        if keep then table.insert(parts, part) end
+    end
+    local new_path = table.concat(wanted, ":")
+    if #parts > 0 then
+        new_path = new_path .. ":" .. table.concat(parts, ":")
+    end
+    hl.env("PATH", new_path)
+end
+
 -- Tamaño del cursor para aplicaciones X11/XWayland.
 hl.env("XCURSOR_SIZE", "24")
 -- Tamaño del cursor para el manejo nativo en Hyprland/Wayland.

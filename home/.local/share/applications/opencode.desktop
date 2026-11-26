@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=OpenCode
+Comment=Agente de código con IA en terminal
+Exec=opencode
+Terminal=true
+Icon=utilities-terminal
+Categories=Development;
+Keywords=ai;code;terminal;agente;
+StartupNotify=false

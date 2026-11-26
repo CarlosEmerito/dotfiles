@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bluetui
+Comment=Gestor de Bluetooth en terminal
+Exec=bluetui
+Terminal=true
+Icon=bluetooth
+Categories=System;
+Keywords=bluetooth;bt;tui;
+StartupNotify=false
