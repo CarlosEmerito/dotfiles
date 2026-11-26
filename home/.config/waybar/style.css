@@ -81,15 +81,10 @@ window#waybar.hidden {
 #clock,
 #battery,
 #cpu,
-#memory,
-#disk,
 #temperature,
 #backlight,
 #network,
-#pulseaudio,
-#tray,
-#mode,
-#idle_inhibitor {
+#pulseaudio {
     background: @surface;
     color: @fg;
     padding: 0 12px;
@@ -124,7 +119,6 @@ window#waybar.hidden {
 }
 
 #cpu,
-#memory,
 #temperature {
     color: @muted;
 }

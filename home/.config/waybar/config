@@ -90,7 +90,8 @@
         "format-disconnected": "󰤭",
         "format-alt": "{ifname}: {ipaddr}/{cidr}",
         "interval": 5,
-        "tooltip": true
+        "tooltip": true,
+        "on-click": "nm-connection-editor"
     },
     "pulseaudio": {
         "format": "{icon}  {volume}%",
@@ -138,7 +139,16 @@
         "tooltip": false,
         "window-rewrite-default": " ",
         "persistent-workspaces": {
-            "*": 5
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "5": [],
+            "6": [],
+            "7": [],
+            "8": [],
+            "9": [],
+            "10": []
         },
         "format-icons": {
             "default": "󰊠",

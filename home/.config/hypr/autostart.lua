@@ -25,7 +25,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("if [ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then pgrep -f 'polkit-gnome-authentication-agent-1$' >/dev/null 2>&1 || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1; fi")
 
     -- Applets de Red y Bluetooth
-    hl.exec_cmd("command -v nm-applet >/dev/null 2>&1 && ! pgrep -x nm-applet >/dev/null 2>&1 && nm-applet --indicator")
     hl.exec_cmd("command -v blueman-applet >/dev/null 2>&1 && ! pgrep -x blueman-applet >/dev/null 2>&1 && blueman-applet")
 
     -- Gestor de Portapapeles (Cliphist): arranca ambos watchers de una vez.
