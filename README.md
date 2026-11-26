@@ -122,8 +122,9 @@ dotfiles/
   el instalador no los habilita por defecto.
 - **Red:** `nm-applet` ya no se inicia. El módulo de red de Waybar muestra el
   estado y al hacer clic abre `nm-connection-editor`.
-- **Primer clic en Waybar:** Hyprland precalienta `systeminfo` al arrancar para
-  evitar el tirón del primer clic en un workspace.
+- **Primer clic en Waybar:** el lanzador `~/.local/bin/waybar` precalienta
+  `systeminfo` y lo mantiene caliente para evitar el tirón del primer clic en
+  un workspace.
 - **Actualizar:** `cd ~/dotfiles && git pull`. Los enlaces hacen el resto.
 
 ## Documentación

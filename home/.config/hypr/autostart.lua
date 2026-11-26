@@ -2,11 +2,6 @@
 -- Migrado desde autostart.conf
 
 hl.on("hyprland.start", function()
-    -- Precalentar systeminfo de Hyprland. Waybar lo consulta en el primer
-    -- clic de workspace para detectar el protocolo Lua; en frío tarda ~800 ms
-    -- y bloquea la barra. Esta consulta se hace una vez, en segundo plano.
-    hl.exec_cmd("command -v hyprctl >/dev/null 2>&1 && hyprctl systeminfo >/dev/null 2>&1")
-
     -- Fondo, barra y notificaciones (solo si están instalados y no están ya corriendo)
     hl.exec_cmd("command -v swaybg >/dev/null 2>&1 && ! pgrep -x swaybg >/dev/null 2>&1 && ( [ -f \"$HOME/.local/share/wallpapers/lanzador-oscuro.png\" ] && swaybg -m fill -i \"$HOME/.local/share/wallpapers/lanzador-oscuro.png\" || swaybg -m solid -c 000000 )")
     hl.exec_cmd("command -v waybar >/dev/null 2>&1 && ! pgrep -x waybar >/dev/null 2>&1 && waybar")

@@ -1,0 +1,18 @@
+#!/bin/sh
+# Precalienta systeminfo antes de arrancar Waybar.
+# Waybar detecta el protocolo Lua en el primer clic consultando systeminfo;
+# en frío esa consulta tarda ~800 ms y bloquea la barra. Hacerla aquí evita
+# el tirón del primer clic en cada arranque de Waybar.
+if command -v hyprctl >/dev/null 2>&1; then
+    hyprctl systeminfo >/dev/null 2>&1
+
+    # La caché de systeminfo caduca; mantenerla caliente mientras Waybar viva
+    # evita que un clic tras un rato de inactividad vuelva a esperar ~800 ms.
+    (
+        while sleep 120; do
+            pgrep -x waybar >/dev/null 2>&1 || exit 0
+            hyprctl systeminfo >/dev/null 2>&1
+        done
+    ) &
+fi
+exec /usr/bin/waybar "$@"
