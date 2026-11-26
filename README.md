@@ -76,7 +76,7 @@ Las copias de seguridad se guardan en `~/.dotfiles-backups/AAAAMMDD-HHMMSS/`.
 dotfiles/
 ├── install.sh          Instalador
 ├── home/               Copia de la carpeta personal
-│   ├── .zshrc  .zprofile  .bashrc  .bash_profile
+│   ├── .zshenv  .zshrc  .zprofile  .bashrc  .bash_profile
 │   ├── .config/        Hyprland, Waybar, Kitty, Rofi, servicios…
 │   └── .local/share/   Lanzadores .desktop
 ├── bin/                Scripts propios para ~/.local/bin
@@ -114,6 +114,10 @@ dotfiles/
   Ese archivo es local y no se sube al repositorio.
 - **GPU:** `envvariables.lua` trae los bloques de Intel, NVIDIA y AMD. El
   instalador activa solo el que elijas.
+- **Zsh:** Oh My Zsh se usa solo con el plugin `sudo`; los alias de git son
+  propios y ligeros. `PATH` y `EDITOR` viven en `.zshenv` para que también los
+  hereden Hyprland y las apps gráficas. Starship es el prompt y
+  `zsh-autosuggestions`/`zsh-syntax-highlighting` se cargan al final.
 - **Secretos:** nunca se guardan aquí. Si necesitas tokens, usa archivos
   locales como `~/.config/qomu/mcp.env` (ignorados por git).
 - **Servicios con proyectos externos:** algunas unidades (`mydot`,

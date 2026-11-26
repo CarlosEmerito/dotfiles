@@ -299,6 +299,7 @@ LINK_DIRS=(
 )
 
 LINK_FILES=(
+    ".zshenv"
     ".zshrc"
     ".zprofile"
     ".bashrc"

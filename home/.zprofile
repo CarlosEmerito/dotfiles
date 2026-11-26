@@ -34,5 +34,5 @@ if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
 fi
 
 
-# Added by Antigravity CLI installer
-export PATH="$HOME/.local/bin:$PATH"
+# El PATH común se define en ~/.zshenv para que lo hereden también
+# Hyprland y las aplicaciones gráficas.

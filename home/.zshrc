@@ -1,11 +1,11 @@
 # Path to Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
 
-# Theme
-# ZSH_THEME="robbyrussell"
+# Prompt: Starship. No cargamos tema de Oh My Zsh.
+ZSH_THEME=""
 
-# Plugins
-plugins=(git sudo)
+# Plugins de Oh My Zsh. git se ha sustituido por los alias de abajo.
+plugins=(sudo)
 
 # Source Oh My Zsh only if it was installed correctly.
 if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
@@ -20,41 +20,52 @@ if command -v starship >/dev/null 2>&1; then
 fi
 
 # --- Modern Aliases ---
-alias ls='eza --icons=always'
-alias ll='eza -lh --icons=always'
-alias la='eza -lah --icons=always'
-alias cat='bat --style=plain'
+alias ls='eza --icons=auto'
+alias ll='eza -lh --icons=auto'
+alias la='eza -lah --icons=auto'
+alias cat='bat --style=plain --paging=never'
 
-# Source Arch Linux specific plugins if they exist
-[[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-[[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# --- Git aliases (reemplazo ligero del plugin git de Oh My Zsh) ---
+alias g='git'
+alias gs='git status -sb'
+alias ga='git add'
+alias gaa='git add --all'
+alias gc='git commit -v'
+alias gcm='git commit -m'
+alias gp='git push'
+alias gl='git pull'
+alias gd='git diff'
+alias gco='git checkout'
+alias gb='git branch'
+alias glog='git log --oneline --graph --decorate -20'
 
-# --- PATH ---
-export PATH="$HOME/.opencode/bin:$HOME/bin:$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.kimi-code/bin:/usr/local/bin:$PATH"
+# --- Options ---
+# Oh My Zsh activa AUTO_CD por defecto; lo desactivamos para evitar
+# cambios de directorio accidentales al escribir mal un comando.
+unsetopt AUTO_CD
 
-# --- Environment Variables ---
-export EDITOR='nano'
-
-# --- Modern CLI Tools ---
-if command -v fastfetch >/dev/null 2>&1; then
-    fastfetch
-fi
-
-# Better directory navigation
-setopt AUTO_CD
-setopt GLOB_DOTS
-
-# History settings
+# --- History ---
 HISTSIZE=10000
 SAVEHIST=10000
 HISTFILE=~/.zsh_history
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_REDUCE_BLANKS
 
-# Key bindings
+# --- Key bindings ---
 bindkey '^H' backward-kill-word          # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word   # Ctrl+Backspace (kitty/modern terminals)
 bindkey '^[[3;5~' kill-word              # Ctrl+Delete
 
 # Qomu MCP token
 [ -f "$HOME/.config/qomu/mcp.env" ] && source "$HOME/.config/qomu/mcp.env"
+
+# Fastfetch: solo en la primera shell interactiva de cada terminal.
+# FASTFETCH_SHOWN se exporta para que las shells anidadas no lo repitan.
+if [[ -o interactive && -t 1 && -z ${FASTFETCH_SHOWN:-} ]] && command -v fastfetch >/dev/null 2>&1; then
+    export FASTFETCH_SHOWN=1
+    fastfetch
+fi
+
+# Autosuggestions y syntax highlighting al final, en este orden.
+[[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+[[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
