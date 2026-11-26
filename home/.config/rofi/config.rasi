@@ -1,11 +1,32 @@
 /**
  * EmeDotEme Custom Theme - Purple & Yellow
+ * Menú de aplicaciones: 3 columnas, búsqueda fuzzy y modos internos.
  */
 
 configuration {
-    modi: "drun,run";
+    modes: "drun,run,window";
     show-icons: true;
     icon-theme: "Papirus";
+
+    /* Solo el nombre de la app, sin el nombre genérico entre paréntesis. */
+    drun-display-format: "{name}";
+    drun-match-fields: "name";
+
+    /* Rofi 2.1.1 muestra cada acción del .desktop como una entrada más
+       (Steam - Tienda, LibreOffice - Calc...). Se desactiva para no llenar
+       el menú de duplicados. */
+    drun-show-actions: false;
+
+    /* Búsqueda tolerante a errores y orden por relevancia. */
+    matching: "fuzzy";
+    case-smart: true;
+    tokenize: true;
+    sorting-method: "fzf";
+    sort: true;
+    cycle: true;
+    hover-select: false;
+    fixed-num-lines: false;
+    scroll-method: 1;
 }
 
 * {
@@ -19,7 +40,6 @@ configuration {
     fg-col2: #F9D342;
     grey: #A394B0;
 
-    width: 600;
     font: "JetBrainsMono Nerd Font 14";
 }
 
@@ -29,11 +49,11 @@ element-text, element-icon , mode-switcher {
 }
 
 window {
-    height: 360px;
-    border: 3px;
+    width: 900px;
+    border: 2px;
     border-color: @purple;
     background-color: @bg-col;
-    border-radius: 12px;
+    border-radius: 16px;
 }
 
 mainbox {
@@ -48,6 +68,7 @@ inputbar {
 }
 
 prompt {
+    enabled: false;
     background-color: @yellow;
     padding: 6px;
     text-color: @bg-col;
@@ -56,35 +77,37 @@ prompt {
 }
 
 entry {
-    padding: 6px;
-    margin: 20px 0px 0px 10px;
+    padding: 8px;
+    margin: 20px 0px 0px 20px;
     text-color: @fg-col;
+    placeholder: "Buscar aplicaciones…";
+    placeholder-color: @grey;
     background-color: @bg-col;
 }
 
 listview {
     border: 0px 0px 0px;
     padding: 6px 0px 0px;
-    margin: 10px 0px 0px 20px;
-    columns: 2;
-    lines: 5;
+    margin: 12px 0px 0px 20px;
+    columns: 3;
+    lines: 6;
     background-color: @bg-col;
 }
 
 element {
-    padding: 5px;
+    padding: 6px;
     background-color: @bg-col;
     text-color: @fg-col;
 }
 
 element-icon {
-    size: 25px;
+    size: 32px;
 }
 
-element selected {
-    background-color:  @selected-col;
+element selected.normal {
+    background-color: @selected-col;
     text-color: @bg-col;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 mode-switcher {
@@ -95,13 +118,13 @@ button {
     padding: 10px;
     background-color: @bg-col-light;
     text-color: @grey;
-    vertical-align: 0.5; 
+    vertical-align: 0.5;
     horizontal-align: 0.5;
 }
 
 button selected {
-  background-color: @bg-col;
-  text-color: @yellow;
+    background-color: @bg-col;
+    text-color: @yellow;
 }
 
 message {
